@@ -13,8 +13,10 @@ architecture test of tb_adder_n is
 
 signal ck, resetn, error: std_logic;
 signal in_a, in_b: signed(N-1 downto 0);
-signal sum_out: signed(N downto 0);
-signal sum_out_std: std_logic_vector(N downto 0);
+signal sum_out: signed(N-1 downto 0);
+signal sum_out_std: std_logic_vector(N-1 downto 0);
+
+signal somma: signed(N downto 0);  --------------------
 
 component adder_n is
 	generic(
@@ -23,7 +25,7 @@ component adder_n is
 	port(
 		in_a: in std_logic_vector(N-1 downto 0);
 		in_b: in std_logic_vector(N-1 downto 0);
-		sum_out: out std_logic_vector(N downto 0)
+		sum_out: out std_logic_vector(N-1 downto 0)
 	);
 end component;
 
@@ -33,6 +35,7 @@ DUT: adder_n generic map(N)
 			 port map(std_logic_vector(in_a), std_logic_vector(in_b), sum_out_std);
 			 
 	sum_out <= signed(sum_out_std);	
+	somma <= (in_a(N-1) & in_a) + (in_b(N-1) & in_b);
 
 	reset_process: process
 	begin
@@ -72,9 +75,9 @@ DUT: adder_n generic map(N)
 		end if;
 	end process;
 	
-	compare_process: process(in_a, in_b, sum_out)
+	compare_process: process(somma, sum_out)
 	begin
-		if ((in_a(N-1) & in_a) + (in_b(N-1) & in_b)) = sum_out then
+		if somma(N downto 1) = sum_out then
 			error <= '0';
 		else
 			error <= '1';

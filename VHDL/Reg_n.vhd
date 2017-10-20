@@ -1,12 +1,12 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.numeric_std.all;
 
 ENTITY Reg_n IS
 GENERIC(Nb: INTEGER :=9);
 PORT(
+	CLK, RST_n, EN: IN STD_LOGIC;
 	DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	CLK: IN STD_LOGIC;
 	DOUT: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
 );
 END ENTITY; 
@@ -17,7 +17,11 @@ BEGIN
 	PROCESS(CLK)
 	BEGIN
 		IF CLK'EVENT AND CLK = '1' THEN
-		DOUT <= DIN;
+			IF RST_n = '0' THEN
+				DOUT <= (OTHERS => '0');
+			ELSIF EN = '0' THEN
+				DOUT <= DIN;
+			END IF;
 		END IF;
 	END PROCESS;
 END beh;
