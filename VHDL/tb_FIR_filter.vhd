@@ -26,15 +26,30 @@ ARCHITECTURE test OF tb_FIR_filter IS
 	SIGNAL sample, filter_out: SIGNED(Nb-1 DOWNTO 0);
 	SIGNAL DINconverted,filter_outconverted: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL coeffs_std: std_logic_vector ((N+1)*Nb - 1 DOWNTO 0);
+	SIGNAL visual_coeffs_integer: coeffs_array;
+	
+	COMPONENT FIR_filter IS
+	GENERIC(
+		Ord: INTEGER := 8; --Filter Order
+		Nb: INTEGER := 9 --# of bits
+		);
+	PORT(
+	CLK, RST_n:	IN STD_LOGIC;
+	VIN:	IN STD_LOGIC;
+	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
+	VOUT: OUT STD_LOGIC;
+	DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+	);
 
+	END COMPONENT;
 
 	
 BEGIN
-
 DINconverted <= std_logic_vector(sample);
 filter_outconverted <= std_logic_vector(filter_out);
 
-DUT: ENTITY WORK.FIR_filter GENERIC MAP (N,Nb) 
+DUT: FIR_filter 
 	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN => DINconverted,  Coeffs => coeffs_std, VOUT => VOUT, DOUT => filter_outconverted);
 	
 	CLK_gen: PROCESS
@@ -46,13 +61,13 @@ DUT: ENTITY WORK.FIR_filter GENERIC MAP (N,Nb)
 	END PROCESS;
 		
 	test_input_read: PROCESS
-	VARIABLE iLine: LINE;
-	VARIABLE i: INTEGER := 0;
+	VARIABLE iLine,cLine: LINE;
+	VARIABLE i,j: INTEGER := 0;
 	VARIABLE coeffs_integer: coeffs_array;
 
 	BEGIN
-	RST_n <= '0';
 	VIN <= '0';
+	RST_n <= '0';
 		file_open(inputs, "input_vectors.txt", READ_MODE);
 		WHILE (NOT ENDFILE(inputs)) LOOP
 			READLINE(inputs, iLine);
@@ -60,15 +75,14 @@ DUT: ENTITY WORK.FIR_filter GENERIC MAP (N,Nb)
 			i := i+1;
 		END LOOP;
 		file_close(inputs);
-
 		file_open(coeff_file, "coeffs.txt", READ_MODE);
 		WHILE (NOT ENDFILE(coeff_file)) LOOP
-			READLINE(coeff_file, iLine);
-			READ(iLine, coeffs_integer(i));
-			
+			READLINE(coeff_file, cLine);
+			READ(cLine, coeffs_integer(j));
+			j := j+1;
 		END LOOP;
 		file_close(coeff_file);
-		
+		visual_coeffs_integer <= coeffs_integer;
 		FOR i IN 0 TO N LOOP
 			coeffs_std((i+1)*Nb-1 DOWNTO i*Nb)<= std_logic_vector(to_signed(coeffs_integer(i),Nb));
 		END LOOP;
@@ -93,9 +107,9 @@ DUT: ENTITY WORK.FIR_filter GENERIC MAP (N,Nb)
 			WRITE(oLine, to_integer(sample));
 			WRITELINE(results, oLine);
 			i := i+1;
-			IF i = N_sample-1 THEN
-				VIN <= '0';
-			END IF;
+			--IF i = N_sample-1 THEN
+			--	VIN <= '0';
+			--END IF;
 		END IF;
 		
 		IF VIN = '0' THEN
