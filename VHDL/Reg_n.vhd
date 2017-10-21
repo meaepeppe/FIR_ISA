@@ -19,7 +19,7 @@ BEGIN
 		IF CLK'EVENT AND CLK = '1' THEN
 			IF RST_n = '0' THEN
 				DOUT <= (OTHERS => '0');
-			ELSIF EN = '0' THEN
+			ELSIF EN = '1' THEN
 				DOUT <= DIN;
 			END IF;
 		END IF;
