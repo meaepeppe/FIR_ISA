@@ -24,17 +24,21 @@ END ENTITY;
 
 ARCHITECTURE beh of FIR_Filter_Unf IS
 
-	TYPE REGS_col IS ARRAY(0 TO 3) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	TYPE REGS_col IS ARRAY(0 TO Ord) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	TYPE REGS_array IS ARRAY(0 TO UO-1) OF REGS_col;
 	SIGNAL REGS_sig: REGS_array;
 	
-	TYPE coeff_array IS ARRAY(0 TO Ord) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	TYPE coeff_array IS ARRAY(Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL Bi: coeff_array;
 	
 	TYPE sum_out_col IS ARRAY(0 TO Ord) OF STD_LOGIC_VECTOR(Ord+Nb-1 DOWNTO 0);
 	TYPE sum_out_array IS ARRAY(0 TO UO-1) OF sum_out_col;
 	SIGNAL sum_outs: sum_out_array;
-
+	
+	TYPE mult_ext_array IS ARRAY(0 TO UO-1) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	SIGNAL mults_ext: mult_ext_array;
+	
+	
 	COMPONENT Reg_n IS
 	GENERIC(Nb: INTEGER :=9);
 	PORT(
@@ -43,6 +47,17 @@ ARCHITECTURE beh of FIR_Filter_Unf IS
 		DOUT: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
 	);
 	END COMPONENT; 
+	
+	COMPONENT mult_n IS
+	GENERIC(
+		Nb: INTEGER := 9
+	);
+	PORT(
+		in_a: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		in_b: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		mult_out: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+	);
+	END COMPONENT;
 	
 	COMPONENT Cell_Unf IS
 	GENERIC
@@ -60,35 +75,59 @@ ARCHITECTURE beh of FIR_Filter_Unf IS
 	END COMPONENT;
 
 BEGIN
-
 	REGs_sig(0)(0) <= DIN_0;
 	REGs_sig(1)(0) <= DIN_1;
 	REGs_sig(2)(0) <= DIN_2;
 
+	Coeffs_gen: FOR i IN 0 TO Ord GENERATE
 	
-	REGS_0_col_gen: FOR j IN 0 TO 1 GENERATE
-		Single_Reg: Reg_n GENERIC MAP(Nb => Nb)
-			PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
-			DIN => REGS_sig(0)(j),
-			DOUT => REGS_sig(0)(j+1));
+		Bi(i) <= Coeffs(((i+1)*Nb)-1 DOWNTO i*Nb);
+	
 	END GENERATE;
 	
-	REGS_1_2_row_gen: FOR i IN 1 TO UO-1 GENERATE --Generazione Registri
-		REGS_1_2_col_gen: FOR j IN 0 TO 2 GENERATE
+	MULTS_gen: FOR i IN 0 TO UO-1 GENERATE
+		
+		Single_mult: mult_n GENERIC MAP(Nb => Nb)
+		PORT MAP(in_a => REGs_sig(i)(0), in_b => Bi(0), mult_out => mults_ext(i));
+		sum_outs(i)(0)(Nb-1 DOWNTO 0) <= mults_ext(i);
+		sum_outs(i)(0)(Ord+Nb-1 DOWNTO Nb) <= (OTHERS => mults_ext(i)(Nb-1));
+	
+	END GENERATE;
+	
+	-- REGS_0_col_gen: FOR j IN 0 TO 1 GENERATE
+		-- Single_Reg: Reg_n GENERIC MAP(Nb => Nb)
+			-- PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
+			-- DIN => REGS_sig(0)(j),
+			-- DOUT => REGS_sig(0)(j+1));
+	-- END GENERATE;
+	
+	-- REGS_1_2_row_gen: FOR i IN 1 TO UO-1 GENERATE 
+		-- REGS_1_2_col_gen: FOR j IN 0 TO 2 GENERATE
+			-- Single_Reg: Reg_n GENERIC MAP(Nb => Nb)
+			-- PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
+			-- DIN => REGS_sig(i)(j),
+			-- DOUT => REGS_sig(i)(j+1));
+		-- END GENERATE;
+	-- END GENERATE;
+	
+	-- PROVVISORIO 
+	REGS_col_gen: FOR i IN 0 TO UO-1 GENERATE
+			REGS_gen: FOR j IN 0 TO (i+Ord/UO) GENERATE
 			Single_Reg: Reg_n GENERIC MAP(Nb => Nb)
 			PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
 			DIN => REGS_sig(i)(j),
 			DOUT => REGS_sig(i)(j+1));
 		END GENERATE;
 	END GENERATE;
-		
-	Mult_col_gen: FOR i IN 0 TO UO-1 GENERATE
-		Mult_gen: FOR j IN 0 TO Ord-1 GENERATE 
+	--PROVVISORIO
+	
+	Cell_col_gen: FOR i IN 0 TO UO-1 GENERATE
+		Cell_gen: FOR j IN 0 TO Ord-1 GENERATE 
 		Single_Cell: Cell_Unf GENERIC MAP(Nb => Nb, Ord => Ord)
 		PORT MAP
 		(
 			DIN =>  REGS_sig(i)((i+j+1)/UO),
-			COEFF => Bi(j),
+			COEFF => Bi(j+1),
 			SUM_IN => sum_outs((i+j+1) MOD UO)(j),
 			SUM_OUT => sum_outs((i+j+1) MOD UO)(j+1)
 		);
@@ -98,4 +137,7 @@ BEGIN
 	DOUT_0 <= sum_outs(0)(Ord)(Ord+Nb-1 DOWNTO Ord);
 	DOUT_1 <= sum_outs(1)(Ord)(Ord+Nb-1 DOWNTO Ord);
 	DOUT_2 <= sum_outs(2)(Ord)(Ord+Nb-1 DOWNTO Ord);
+	
+	VOUT <= VIN;
+	
 END ARCHITECTURE;
