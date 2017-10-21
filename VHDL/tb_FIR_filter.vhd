@@ -49,7 +49,7 @@ BEGIN
 DINconverted <= std_logic_vector(sample);
 
 DUT: FIR_filter 
-	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN => DINconverted,  Coeffs => coeffs_std, VOUT => VOUT, DOUT => filter_outconverted);
+	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN => DINconverted,  Coeffs => coeffs_std, VOUT => VOUT, DOUT => filter_out);
 	
 	CLK_gen: PROCESS
 	BEGIN
@@ -100,9 +100,10 @@ DUT: FIR_filter
 	VARIABLE i: INTEGER := 0;
 	FILE results: text is out "output_vectors.txt";
 	BEGIN
-		
-		IF CLK'EVENT AND CLK = '1' AND VIN = '1' THEN
+		IF CLK'EVENT AND CLK = '1' THEN
 			sample <= to_signed(input_samples(i),sample'LENGTH);
+		END IF;
+		IF CLK'EVENT AND CLK = '1' AND VIN = '1' THEN
 			WRITE(oLine, to_integer(sample));
 			WRITELINE(results, oLine);
 			i := i+1;
