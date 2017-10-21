@@ -23,8 +23,8 @@ ARCHITECTURE test OF tb_FIR_filter IS
 
 	SIGNAL CLK, RST_n: STD_LOGIC;
 	SIGNAL VIN, VOUT: STD_LOGIC;
-	SIGNAL sample, filter_out: SIGNED(Nb-1 DOWNTO 0);
-	SIGNAL DINconverted,filter_outconverted: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	SIGNAL sample: SIGNED(Nb-1 DOWNTO 0);
+	SIGNAL DINconverted,filter_out: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL coeffs_std: std_logic_vector ((N+1)*Nb - 1 DOWNTO 0);
 	SIGNAL visual_coeffs_integer: coeffs_array;
 	
@@ -47,7 +47,6 @@ ARCHITECTURE test OF tb_FIR_filter IS
 	
 BEGIN
 DINconverted <= std_logic_vector(sample);
-filter_outconverted <= std_logic_vector(filter_out);
 
 DUT: FIR_filter 
 	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN => DINconverted,  Coeffs => coeffs_std, VOUT => VOUT, DOUT => filter_outconverted);
