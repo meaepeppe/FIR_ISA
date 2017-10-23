@@ -19,7 +19,7 @@ PORT(
 );
 END ENTITY;
 
-ARCHITECTURE beh OF FIR_filter IS
+ARCHITECTURE beh_fir OF FIR_filter IS
 	
 	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Ord+Nb-1 DOWNTO 0);
 	TYPE sig_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
@@ -105,4 +105,4 @@ BEGIN
 	--VOUT <= VIN_Delay(Ord); -- PROVVISORIA
 	VOUT <= VIN;
 	
-END beh;
+END beh_fir;
