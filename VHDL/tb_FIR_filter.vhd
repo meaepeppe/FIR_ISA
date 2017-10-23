@@ -28,6 +28,8 @@ ARCHITECTURE test OF tb_FIR_filter IS
 	SIGNAL coeffs_std: std_logic_vector ((N+1)*Nb - 1 DOWNTO 0);
 	SIGNAL visual_coeffs_integer: coeffs_array;
 	
+	SIGNAL regToDIN,DOUTtoReg: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	
 	COMPONENT FIR_filter IS
 	GENERIC(
 		Ord: INTEGER := 8; --Filter Order
@@ -41,15 +43,32 @@ ARCHITECTURE test OF tb_FIR_filter IS
 	VOUT: OUT STD_LOGIC;
 	DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
 	);
-
 	END COMPONENT;
+	
+	COMPONENT Reg_n IS
+	GENERIC(Nb: INTEGER :=9);
+	PORT(
+		CLK, RST_n, EN: IN STD_LOGIC;
+		DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		DOUT: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+	);
+	END COMPONENT; 
 
 	
 BEGIN
 DINconverted <= std_logic_vector(sample);
 
 DUT: FIR_filter 
-	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN => DINconverted,  Coeffs => coeffs_std, VOUT => VOUT, DOUT => filter_out);
+	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN => regToDIN,  
+						Coeffs => coeffs_std, VOUT => VOUT, DOUT => DOUTtoReg);
+	
+REG_IN: Reg_n 
+	GENERIC MAP (Nb => Nb)
+	PORT MAP (CLK => CLK, RST_n => RST_n, EN => VIN, DIN => DINconverted, DOUT => regToDIN );
+
+REG_OUT: Reg_n
+	GENERIC MAP (Nb => Nb)
+	PORT MAP (CLK => CLK, RST_n => RST_n, EN => VIN, DIN => DOUTtoReg, DOUT => filter_out );
 	
 	CLK_gen: PROCESS
 	BEGIN
