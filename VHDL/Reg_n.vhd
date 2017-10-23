@@ -11,7 +11,7 @@ PORT(
 );
 END ENTITY; 
 
-ARCHITECTURE beh OF Reg_n IS 
+ARCHITECTURE beh_reg OF Reg_n IS 
 	
 BEGIN
 	PROCESS(CLK)
@@ -24,4 +24,4 @@ BEGIN
 			END IF;
 		END IF;
 	END PROCESS;
-END beh;
+END beh_reg;
