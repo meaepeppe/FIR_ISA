@@ -17,8 +17,8 @@ END ENTITY;
 
 ARCHITECTURE beh_cell OF Cell IS
 
-	SIGNAL mult: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
+	SIGNAL mult: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	--SIGNAL mult_ext: STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 	SIGNAL REG_OUT_sig: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 
 	COMPONENT adder_n IS
@@ -39,7 +39,7 @@ ARCHITECTURE beh_cell OF Cell IS
 	PORT(
 		in_a: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		in_b: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		mult_out: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+		mult_out: OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
 	);
 	END COMPONENT;
 	
@@ -60,10 +60,10 @@ BEGIN
 	Product: mult_n GENERIC MAP(Nb => Nb)
 					PORT MAP(in_a => REG_OUT_sig, in_b => Bi, mult_out => mult);
 	
-	mult_ext(Nb-1 DOWNTO 0) <= mult;
-	mult_ext(Nb+Ord DOWNTO Nb) <= (OTHERS => mult(Nb-1));
+	--mult_ext(Nb-1 DOWNTO 0) <= mult;
+	--mult_ext(Nb+Ord DOWNTO Nb) <= (OTHERS => mult(Nb-1));
 	
 	Sum: adder_n GENERIC MAP(Nb => Nb+Ord+1) -- aggiunti 9 bit di guardia
-				 PORT MAP(in_a => SUM_IN, in_b => mult_ext, sum_out => ADD_OUT);
+				 PORT MAP(in_a => SUM_IN, in_b => mult, sum_out => ADD_OUT);
 				
 END beh_cell;	

@@ -14,7 +14,7 @@ PORT(
 	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
 	VOUT: OUT STD_LOGIC;
-	DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+	DOUT:	OUT STD_LOGIC_VECTOR(Nb DOWNTO 0)
 	
 );
 END ENTITY;
@@ -28,8 +28,8 @@ ARCHITECTURE beh_fir OF FIR_filter IS
 	SIGNAL REG_OUT_array: sig_array;
 	SIGNAL SUM_OUT_array: sum_array;
 	
-	SIGNAL DIN_mult: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	SIGNAL tmp: STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
+	--SIGNAL DIN_mult: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	--SIGNAL tmp: STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
 	
 	COMPONENT Cell IS 
 		GENERIC(Nb:INTEGER:=9;
@@ -60,7 +60,7 @@ ARCHITECTURE beh_fir OF FIR_filter IS
 		PORT(
 			in_a: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 			in_b: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			mult_out: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+			mult_out: OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
 		);
 	END COMPONENT;
 
@@ -72,13 +72,13 @@ BEGIN
 	END GENERATE;
 	
 	DIN_mult_gen: mult_n GENERIC MAP(Nb => Nb)
-						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => DIN_mult);	
+						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => SUM_OUT_array(0));	
 	
 	REG_OUT_array(0) <= DIN;
 	
-	tmp(Nb-1 DOWNTO 0) <= DIN_mult;
-	tmp(Ord+Nb DOWNTO Nb) <= (OTHERS => DIN_mult(Nb-1));
-	SUM_OUT_array(0) <= tmp;
+	--tmp(Nb-1 DOWNTO 0) <= DIN_mult;
+	--tmp(Ord+Nb DOWNTO Nb) <= (OTHERS => DIN_mult(Nb-1));
+	--SUM_OUT_array(0) <= tmp;
 	
 	Cells_gen: FOR j IN 0 to Ord-1 GENERATE
 			Single_cell: Cell GENERIC MAP(Nb => Nb, Ord => Ord) -- Nb is the # of bits entering the j-th cell
@@ -90,18 +90,8 @@ BEGIN
 									ADD_OUT => SUM_OUT_array(j+1));
 	END GENERATE;
 	
-	DOUT <= SUM_OUT_array(Ord)(Nb+Ord DOWNTO Nb);
+	DOUT <= SUM_OUT_array(Ord)(Nb+Ord DOWNTO Nb-1);
 	
-	-- VOUT Generation PROVVISORIA
-	
-	--VIN_Delay(0) <= VIN;
-
-	--FFS_gen: FOR k IN 0 TO Ord-1 GENERATE
-	--		Single_cell: Reg_n GENERIC MAP(Ord => 1)
-	--			   PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN, DIN => VIN_Delay(k DOWNTO k), DOUT => VIN_Delay(k+1 DOWNTO k+1));
-	--END GENERATE;
-	
-	--VOUT <= VIN_Delay(Ord); -- PROVVISORIA
 	VOUT <= VIN;
 	
 END beh_fir;
