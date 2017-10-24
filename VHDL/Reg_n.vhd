@@ -16,10 +16,10 @@ ARCHITECTURE beh_reg OF Reg_n IS
 BEGIN
 	PROCESS(CLK)
 	BEGIN
-		IF CLK'EVENT AND CLK = '1' THEN
-			IF RST_n = '0' THEN
+		IF RST_n = '0' THEN
 				DOUT <= (OTHERS => '0');
-			ELSIF EN = '1' THEN
+		ELSIF CLK'EVENT AND CLK = '1' THEN
+			IF EN = '1' THEN
 				DOUT <= DIN;
 			END IF;
 		END IF;
