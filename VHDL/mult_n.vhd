@@ -9,7 +9,7 @@ ENTITY mult_n IS
 	PORT(
 		in_a: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		in_b: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		mult_out: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+		mult_out: OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
 	);
 END ENTITY;
 
@@ -20,5 +20,5 @@ BEGIN
 	BEGIN
 		mult_signed <= SIGNED(in_a) * SIGNED(in_b);
 	END PROCESS;
-	mult_out <= STD_LOGIC_VECTOR(mult_signed(Nb-1 DOWNTO 0));
+	mult_out <= STD_LOGIC_VECTOR(mult_signed);
 END beh_mult;
