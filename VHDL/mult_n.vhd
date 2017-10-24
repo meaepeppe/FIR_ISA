@@ -20,5 +20,5 @@ BEGIN
 	BEGIN
 		mult_signed <= SIGNED(in_a) * SIGNED(in_b);
 	END PROCESS;
-	mult_out <= STD_LOGIC_VECTOR(mult_signed(2*Nb-1 DOWNTO Nb));
+	mult_out <= STD_LOGIC_VECTOR(mult_signed(Nb-1 DOWNTO 0));
 END beh_mult;
