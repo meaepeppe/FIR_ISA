@@ -14,22 +14,22 @@ PORT(
 	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
 	VOUT: OUT STD_LOGIC;
-	DOUT:	OUT STD_LOGIC_VECTOR(Nb DOWNTO 0)
+	DOUT:	OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
 	
 );
 END ENTITY;
 
 ARCHITECTURE beh_fir OF FIR_filter IS
 	
-	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
+	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	TYPE sig_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	
 	SIGNAL Bi: sig_array; -- there IS Ord instead of Ord-1 becaUSE the coeffs are Ord+1
 	SIGNAL REG_OUT_array: sig_array;
 	SIGNAL SUM_OUT_array: sum_array;
 	
-	--SIGNAL DIN_mult: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	--SIGNAL tmp: STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
+	SIGNAL DIN_mult: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	SIGNAL mult_ext: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	
 	COMPONENT Cell IS 
 		GENERIC(Nb:INTEGER:=9;
@@ -72,13 +72,14 @@ BEGIN
 	END GENERATE;
 	
 	DIN_mult_gen: mult_n GENERIC MAP(Nb => Nb)
-						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => SUM_OUT_array(0));	
+						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => DIN_mult);	
 	
 	REG_OUT_array(0) <= DIN;
 	
-	--tmp(Nb-1 DOWNTO 0) <= DIN_mult;
-	--tmp(Ord+Nb DOWNTO Nb) <= (OTHERS => DIN_mult(Nb-1));
-	--SUM_OUT_array(0) <= tmp;
+	mult_ext(Nb DOWNTO 0) <= DIN_mult (Nb+Ord DOWNTO Ord);
+	mult_ext(2*Nb-1 DOWNTO Nb+1) <= (others => mult_ext(Nb));
+
+	SUM_OUT_array(0) <= mult_ext;
 	
 	Cells_gen: FOR j IN 0 to Ord-1 GENERATE
 			Single_cell: Cell GENERIC MAP(Nb => Nb, Ord => Ord) -- Nb is the # of bits entering the j-th cell
@@ -90,7 +91,7 @@ BEGIN
 									ADD_OUT => SUM_OUT_array(j+1));
 	END GENERATE;
 	
-	DOUT <= SUM_OUT_array(Ord)(Nb+Ord DOWNTO Nb-1);
+	DOUT <= SUM_OUT_array(Ord);
 	
 	VOUT <= VIN;
 	
