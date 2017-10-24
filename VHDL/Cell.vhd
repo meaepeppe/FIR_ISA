@@ -8,17 +8,17 @@ ENTITY Cell IS
 	PORT(
 		CLK, RST_n, EN : IN STD_LOGIC;
 		DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		SUM_IN: IN STD_LOGIC_VECTOR(Nb+Ord-1 DOWNTO 0);
+		SUM_IN: IN STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 		Bi: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		REG_OUT : OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0); 
-		ADD_OUT: OUT STD_LOGIC_VECTOR(Nb+Ord-1 DOWNTO 0) -- ADD_OUT has one more bit than the inputs
+		ADD_OUT: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0) -- aggiunti 9 bit di guardia
 	);
 END ENTITY;
 
 ARCHITECTURE beh_cell OF Cell IS
 
 	SIGNAL mult: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nb+Ord-1 DOWNTO 0);
+	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 	SIGNAL REG_OUT_sig: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 
 	COMPONENT adder_n IS
@@ -61,9 +61,9 @@ BEGIN
 					PORT MAP(in_a => REG_OUT_sig, in_b => Bi, mult_out => mult);
 	
 	mult_ext(Nb-1 DOWNTO 0) <= mult;
-	mult_ext(Nb+Ord-1 DOWNTO Nb) <= (OTHERS => mult(Nb-1));
+	mult_ext(Nb+Ord DOWNTO Nb) <= (OTHERS => mult(Nb-1));
 	
-	Sum: adder_n GENERIC MAP(Nb => Nb+Ord)
+	Sum: adder_n GENERIC MAP(Nb => Nb+Ord+1) -- aggiunti 9 bit di guardia
 				 PORT MAP(in_a => SUM_IN, in_b => mult_ext, sum_out => ADD_OUT);
 				
 END beh_cell;	

@@ -21,7 +21,7 @@ END ENTITY;
 
 ARCHITECTURE beh_fir OF FIR_filter IS
 	
-	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Ord+Nb-1 DOWNTO 0);
+	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
 	TYPE sig_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	
 	SIGNAL Bi: sig_array; -- there IS Ord instead of Ord-1 becaUSE the coeffs are Ord+1
@@ -29,8 +29,7 @@ ARCHITECTURE beh_fir OF FIR_filter IS
 	SIGNAL SUM_OUT_array: sum_array;
 	
 	SIGNAL DIN_mult: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	--SIGNAL VIN_Delay: STD_LOGIC_VECTOR(Ord DOWNTO 0); -- PROVVISORIA
-	SIGNAL tmp: STD_LOGIC_VECTOR(Ord+Nb-1 DOWNTO 0);
+	SIGNAL tmp: STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
 	
 	COMPONENT Cell IS 
 		GENERIC(Nb:INTEGER:=9;
@@ -38,10 +37,10 @@ ARCHITECTURE beh_fir OF FIR_filter IS
 		PORT(
 			CLK, RST_n, EN : IN STD_LOGIC;
 			DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			SUM_IN: IN STD_LOGIC_VECTOR(Nb+Ord-1 DOWNTO 0);
+			SUM_IN: IN STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 			Bi: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 			REG_OUT : OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			ADD_OUT: OUT STD_LOGIC_VECTOR(Nb+Ord-1 DOWNTO 0)
+			ADD_OUT: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0)
 		);
 	END COMPONENT;
 	
@@ -78,7 +77,7 @@ BEGIN
 	REG_OUT_array(0) <= DIN;
 	
 	tmp(Nb-1 DOWNTO 0) <= DIN_mult;
-	tmp(Ord+Nb-1 DOWNTO Nb) <= (OTHERS => DIN_mult(Nb-1));
+	tmp(Ord+Nb DOWNTO Nb) <= (OTHERS => DIN_mult(Nb-1));
 	SUM_OUT_array(0) <= tmp;
 	
 	Cells_gen: FOR j IN 0 to Ord-1 GENERATE
@@ -91,7 +90,7 @@ BEGIN
 									ADD_OUT => SUM_OUT_array(j+1));
 	END GENERATE;
 	
-	DOUT <= SUM_OUT_array(Ord)(Nb+Ord-1 DOWNTO Nb-1);
+	DOUT <= SUM_OUT_array(Ord)(Nb+Ord DOWNTO Nb);
 	
 	-- VOUT Generation PROVVISORIA
 	
