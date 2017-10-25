@@ -12,15 +12,15 @@ ENTITY Cell_Unf IS
 	(
 		DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		COEFF: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		SUM_IN: IN STD_LOGIC_VECTOR(Ord+Nb-1 DOWNTO 0);
-		SUM_OUT: OUT STD_LOGIC_VECTOR(Ord+Nb-1 DOWNTO 0)
+		SUM_IN: IN STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
+		SUM_OUT: OUT STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0)
 	);
 END ENTITY;
 
 ARCHITECTURE beh OF Cell_Unf IS
 
-	SIGNAL mult_out: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	SIGNAL mult_ext: STD_LOGIC_VECTOR(Ord+Nb-1 DOWNTO 0);
+	SIGNAL mult_out: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	SIGNAL mult_ext: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	
 	COMPONENT adder_n IS
 	GENERIC(Nb: INTEGER := 9);
@@ -34,11 +34,10 @@ ARCHITECTURE beh OF Cell_Unf IS
 
 	COMPONENT mult_n IS
 	GENERIC(Nb: INTEGER := 9);
-	PORT
-	(
+	PORT(
 		in_a: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		in_b: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		mult_out: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+		mult_out: OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
 	);
 	END COMPONENT;
 	
@@ -52,10 +51,10 @@ BEGIN
 		mult_out => mult_out
 	);
 	
-	mult_ext(Nb-1 DOWNTO 0) <= mult_out;
-	mult_ext(Ord+Nb-1 DOWNTO Nb) <= (OTHERS => mult_out(Nb-1));
+	mult_ext(Nb DOWNTO 0) <= mult_out(Nb DOWNTO 0);
+	mult_ext(2*Nb-1 DOWNTO Nb+1) <= (OTHERS => mult_ext(Nb));
 	
-	sum: adder_n GENERIC MAP(Nb => Ord+Nb)
+	sum: adder_n GENERIC MAP(Nb => Ord+Nb+1)
 	PORT MAP
 	(
 		in_a => mult_ext,
