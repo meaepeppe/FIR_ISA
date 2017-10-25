@@ -84,7 +84,10 @@ BEGIN
 	
 	REG_OUT_array(0) <= DIN;
 	
-	 Sum_0_3(0)<= DIN_mult;
+	DIN_Mult_Pipe: Reg_n GENERIC MAP( Nb => 2*Nb)
+						PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
+						DIN => DIN_mult,
+						DOUT => Sum_0_3(0));
 	
 	Cells_gen_1: FOR j IN 0 to 2 GENERATE
 			Single_cell: Cell_Pipe GENERIC MAP(Nb => Nb, Ord => Ord, NRegs => 1) -- Nb is the # of bits entering the j-th cell
@@ -128,16 +131,6 @@ BEGIN
 	
 	DOUT <= Sum_6_8(Ord);
 	
-	-- VOUT Generation PROVVISORIA
-	
-	--VIN_Delay(0) <= VIN;
-
-	--FFS_gen: FOR k IN 0 TO Ord-1 GENERATE
-	--		Single_cell: Reg_n GENERIC MAP(Ord => 1)
-	--			   PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN, DIN => VIN_Delay(k DOWNTO k), DOUT => VIN_Delay(k+1 DOWNTO k+1));
-	--END GENERATE;
-	
-	--VOUT <= VIN_Delay(Ord); -- PROVVISORIA
 	VOUT <= VIN;
 
 END ARCHITECTURE;
