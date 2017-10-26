@@ -36,7 +36,7 @@ ARCHITECTURE test OF tb_FIR_filter IS
 	SIGNAL regToDIN: sample_std_array;
 	SIGNAL DOUTtoReg: sampleout_std_array;
 	
-	COMPONENT FIR_filter_Unf IS
+	COMPONENT FIR_filter_Unf_2 IS
 	GENERIC(
 			Ord: INTEGER := 8; --Filter Order
 			Nb: INTEGER := 9; --# of bits
@@ -71,7 +71,7 @@ DINconverted(0) <= std_logic_vector(sample(0));
 DINconverted(1) <= std_logic_vector(sample(1));
 DINconverted(2) <= std_logic_vector(sample(2));
 
-DUT: FIR_filter_Unf 
+DUT: FIR_filter_Unf_2
 	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN_0 => regToDIN(0),  
 						DIN_1 => regToDIN(1), DIN_2 => regToDIN(2), 
 						Coeffs => coeffs_std, VOUT => VOUT, DOUT_0 => DOUTtoReg(0),
