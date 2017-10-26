@@ -88,8 +88,8 @@ BEGIN
 		Single_mult: mult_n GENERIC MAP(Nb => Nb)
 		PORT MAP(in_a => REGs_sig(i)(0), in_b => Bi(0), mult_out => mults_ext(i));
 		
-		sum_outs(i)(0)(Nb DOWNTO 0) <= mults_ext(i)(Nb DOWNTO 0);
-		sum_outs(i)(0)(2*Nb-1 DOWNTO Nb+1) <= (OTHERS => sum_outs(i)(0)(Nb));
+		sum_outs(i)(0)(Nb DOWNTO 0) <= mults_ext(i)(Nb+Ord DOWNTO Ord);
+		sum_outs(i)(0)(Nb+Ord DOWNTO Nb+1) <= (OTHERS => sum_outs(i)(0)(Nb));
 	
 	END GENERATE;
 	
