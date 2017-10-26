@@ -34,7 +34,7 @@ ARCHITECTURE beh OF FIR_Filter_Pipe IS
 	SIGNAL Sum_3_6: sum_3_6_array;
 	SIGNAL Sum_6_8: sum_6_8_array;
 	
-	SIGNAL DIN_mult: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	SIGNAL DIN_mult, DIN_mult_ext: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	--SIGNAL VIN_Delay: STD_LOGIC_VECTOR(Ord DOWNTO 0); -- PROVVISORIA
 	SIGNAL tmp: STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
 	
@@ -79,14 +79,18 @@ BEGIN
 		Bi(i) <= Coeffs(((i+1)*Nb)-1 DOWNTO (i*Nb));
 	END GENERATE;
 	
+	REG_OUT_array(0) <= DIN;
+	
 	DIN_mult_gen: mult_n GENERIC MAP(Nb => Nb)
 						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => DIN_mult);	
 	
-	REG_OUT_array(0) <= DIN;
+	DIN_mult_ext(Nb DOWNTO 0) <= DIN_mult(Nb DOWNTO 0);
+	DIN_mult_ext(2*Nb-1 DOWNTO Nb+1) <= ( OTHERS => DIN_mult_ext(Nb));
+	
 	
 	DIN_Mult_Pipe: Reg_n GENERIC MAP( Nb => 2*Nb)
 						PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
-						DIN => DIN_mult,
+						DIN => DIN_mult_ext,
 						DOUT => Sum_0_3(0));
 	
 	Cells_gen_1: FOR j IN 0 to 2 GENERATE
