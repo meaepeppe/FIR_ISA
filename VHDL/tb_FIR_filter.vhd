@@ -32,18 +32,19 @@ ARCHITECTURE test OF tb_FIR_filter IS
 	SIGNAL regToDIN: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL DOUTtoReg: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	
-	COMPONENT FIR_filter IS
+	COMPONENT FIR_filter_Pipe IS
 	GENERIC(
-		Ord: INTEGER := 8; --Filter Order
-		Nb: INTEGER := 9 --# of bits
-		);
+			Ord: INTEGER := 8; --Filter Order
+			Nb: INTEGER := 9; --# of bits
+			PO: INTEGER := 3 -- Pipeline Order
+			);
 	PORT(
-	CLK, RST_n:	IN STD_LOGIC;
-	VIN:	IN STD_LOGIC;
-	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
-	VOUT: OUT STD_LOGIC;
-	DOUT:	OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
+		CLK, RST_n:	IN STD_LOGIC;
+		VIN:	IN STD_LOGIC;
+		DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS N+1
+		VOUT: OUT STD_LOGIC;
+		DOUT: OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
 	);
 	END COMPONENT;
 	
@@ -60,7 +61,7 @@ ARCHITECTURE test OF tb_FIR_filter IS
 BEGIN
 DINconverted <= std_logic_vector(sample);
 
-DUT: FIR_filter 
+DUT: FIR_filter_Pipe 
 	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN, DIN => regToDIN,  
 						Coeffs => coeffs_std, VOUT => VOUT, DOUT => DOUTtoReg);
 	
