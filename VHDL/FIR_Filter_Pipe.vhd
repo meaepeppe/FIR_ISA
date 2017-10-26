@@ -14,7 +14,7 @@ ENTITY FIR_Filter_Pipe IS
 		DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS N+1
 		VOUT: OUT STD_LOGIC;
-		DOUT: OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
+		DOUT: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0)
 	);
 END ENTITY;
 
@@ -34,7 +34,7 @@ ARCHITECTURE beh OF FIR_Filter_Pipe IS
 	SIGNAL Sum_3_6: sum_3_6_array;
 	SIGNAL Sum_6_8: sum_6_8_array;
 	
-	SIGNAL DIN_mult, DIN_mult_ext: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	SIGNAL DIN_mult, DIN_mult_ext: STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 	--SIGNAL VIN_Delay: STD_LOGIC_VECTOR(Ord DOWNTO 0); -- PROVVISORIA
 	SIGNAL tmp: STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
 	
@@ -84,8 +84,8 @@ BEGIN
 	DIN_mult_gen: mult_n GENERIC MAP(Nb => Nb)
 						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => DIN_mult);	
 	
-	DIN_mult_ext(Nb DOWNTO 0) <= DIN_mult(2*Nb-1 DOWNTO Nb-1);
-	DIN_mult_ext(2*Nb-1 DOWNTO Nb+1) <= ( OTHERS => DIN_mult_ext(Nb));
+	DIN_mult_ext(Nb DOWNTO 0) <= DIN_mult(Nb+Ord DOWNTO Ord);
+	DIN_mult_ext(Nb+Ord DOWNTO Nb+1) <= ( OTHERS => DIN_mult_ext(Nb));
 	
 	
 	DIN_Mult_Pipe: Reg_n GENERIC MAP( Nb => 2*Nb)
