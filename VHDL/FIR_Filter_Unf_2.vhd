@@ -35,7 +35,7 @@ ARCHITECTURE beh of FIR_Filter_Unf_2 IS
 	TYPE sum_out_array IS ARRAY(0 TO UO-1) OF sum_out_col;
 	SIGNAL sum_outs: sum_out_array;
 	
-	TYPE mult_ext_array IS ARRAY(0 TO UO-1) OF STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	TYPE mult_ext_array IS ARRAY(0 TO UO-1) OF STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 	SIGNAL mults_ext: mult_ext_array;
 	
 	
@@ -88,8 +88,8 @@ BEGIN
 		Single_mult: mult_n GENERIC MAP(Nb => Nb)
 		PORT MAP(in_a => REGs_sig(i)(0), in_b => Bi(0), mult_out => mults_ext(i));
 		
-		sum_outs(i)(0)(Nb DOWNTO 0) <= mults_ext(i)(Nb DOWNTO 0);
-		sum_outs(i)(0)(2*Nb-1 DOWNTO Nb+1) <= (OTHERS => sum_outs(i)(0)(Nb));
+		sum_outs(i)(0)(Nb DOWNTO 0) <= mults_ext(i)(Nb+Ord DOWNTO Ord);
+		sum_outs(i)(0)(Nb+Ord DOWNTO Nb+1) <= (OTHERS => sum_outs(i)(0)(Nb));
 	
 	END GENERATE;
 	
