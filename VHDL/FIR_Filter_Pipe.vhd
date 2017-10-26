@@ -84,7 +84,7 @@ BEGIN
 	DIN_mult_gen: mult_n GENERIC MAP(Nb => Nb)
 						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => DIN_mult);	
 	
-	DIN_mult_ext(Nb DOWNTO 0) <= DIN_mult(Nb DOWNTO 0);
+	DIN_mult_ext(Nb DOWNTO 0) <= DIN_mult(2*Nb-1 DOWNTO Nb-1);
 	DIN_mult_ext(2*Nb-1 DOWNTO Nb+1) <= ( OTHERS => DIN_mult_ext(Nb));
 	
 	
