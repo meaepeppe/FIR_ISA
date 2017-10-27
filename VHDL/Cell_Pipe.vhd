@@ -60,13 +60,13 @@ BEGIN
 	Product: mult_n GENERIC MAP(Nb => Nb)
 					PORT MAP(in_a => Reg_buf, in_b => Bi, mult_out => mult);
 					
-	Pipe_reg: Reg_n GENERIC MAP(Nb => mult'LENGTH)
+	Mult_Pipe_reg: Reg_n GENERIC MAP(Nb => mult'LENGTH)
 				PORT MAP(DIN => mult, CLK => CLK, RST_n => RST_n, EN => EN, DOUT => Last_reg_out);
 	
 	Last_reg_ext(Nb DOWNTO 0) <= Last_reg_out(Nb+Ord DOWNTO Ord);
-	Last_reg_ext(2*Nb-1 DOWNTO Nb+1) <= (OTHERS => (Last_reg_ext(Nb)));
+	Last_reg_ext(Nb+Ord DOWNTO Nb+1) <= (OTHERS => (Last_reg_ext(Nb)));
 	
-	Sum_reg: Reg_n GENERIC MAP(Nb => SUM_IN'LENGTH)
+	Sum_Pipe_reg: Reg_n GENERIC MAP(Nb => SUM_IN'LENGTH)
 				   PORT MAP(CLK => CLK, RST_n => RST_n, EN => EN,
 							DIN => SUM_IN,
 							DOUT => Sum_in_reg);
