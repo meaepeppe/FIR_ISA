@@ -10,7 +10,7 @@ ENTITY Cell_Unf_Pipe IS
 	);
 	PORT
 	(
-		CLK, RST_n, EN: IN STD_LOGIC;
+		CLK, RST_n, EN_1, EN_2: IN STD_LOGIC;
 		DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		COEFF: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		SUM_IN: IN STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
@@ -19,7 +19,7 @@ ENTITY Cell_Unf_Pipe IS
 END ENTITY;
 
 ARCHITECTURE beh OF Cell_Unf_Pipe IS
-
+	
 	SIGNAL mult_out, mult_reg_out, mult_ext, Sum_reg_out: STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 	
 	COMPONENT Reg_n IS
@@ -51,7 +51,7 @@ ARCHITECTURE beh OF Cell_Unf_Pipe IS
 	END COMPONENT;
 	
 BEGIN
-
+	
 	mult: mult_n GENERIC MAP(Nb => Nb)
 	PORT MAP
 	(
@@ -60,8 +60,8 @@ BEGIN
 		mult_out => mult_out
 	);
 	
-	reg: Reg_n GENERIC MAP(Nb => mult_out'LENGTH)
-				PORT MAP(CLK => CLK, RST_n => RST_n, EN => EN,
+	mult_reg: Reg_n GENERIC MAP(Nb => mult_out'LENGTH)
+				PORT MAP(CLK => CLK, RST_n => RST_n, EN => EN_2,
 						DIN => mult_out,
 						DOUT => mult_reg_out);
 	
@@ -69,7 +69,7 @@ BEGIN
 	mult_ext(Nb+Ord DOWNTO Nb+1) <= (OTHERS => mult_ext(Nb));
 	
 	sum_reg: Reg_n GENERIC MAP(Nb => SUM_IN'LENGTH)
-					PORT MAP (CLK => CLK, RST_n => RST_n, EN => EN,
+					PORT MAP (CLK => CLK, RST_n => RST_n, EN => EN_1,
 							  DIN => SUM_IN,
 							  DOUT => Sum_reg_out);
 	
@@ -80,5 +80,5 @@ BEGIN
 		in_b => Sum_reg_out,
 		sum_out => SUM_OUT
 	);
-
+	
 END ARCHITECTURE;
