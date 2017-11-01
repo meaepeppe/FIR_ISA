@@ -1,0 +1,236 @@
+****************************************
+Report : area
+Design : FIR_filter
+Version: Z-2007.03-SP1
+Date   : Thu Oct 26 23:19:33 2017
+****************************************
+
+Library(s) Used:
+
+    NangateOpenCellLibrary (File: /software/dk/nangate45/synopsys/NangateOpenCellLibrary_typical_ecsm_nowlm.db)
+
+Number of ports:              112
+Number of nets:               310
+Number of cells:                9
+Number of references:           9
+
+Combinational area:       4254.935999
+Noncombinational area:     383.040012
+Net Interconnect area:      undefined  (Wire load has zero net area)
+
+Total cell area:          4637.976074
+Total area:                 undefined
+1
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+Information: Updating design information... (UID-85)
+Information: Propagating switching activity (low effort zero delay simulation). (PWR-6)
+Warning: There is no defined clock in the design. (PWR-80)
+ 
+****************************************
+Report : power
+        -analysis_effort low
+Design : FIR_filter
+Version: Z-2007.03-SP1
+Date   : Fri Oct 27 00:52:16 2017
+****************************************
+
+
+Library(s) Used:
+
+    NangateOpenCellLibrary (File: /software/dk/nangate45/synopsys/NangateOpenCellLibrary_typical_ecsm_nowlm.db)
+
+
+Operating Conditions: typical   Library: NangateOpenCellLibrary
+Wire Load Model Mode: top
+
+Design        Wire Load Model            Library
+------------------------------------------------
+FIR_filter             5K_hvratio_1_1    NangateOpenCellLibrary
+
+
+Global Operating Voltage = 1.1  
+Power-specific unit information :
+    Voltage Units = 1V
+    Capacitance Units = 1.000000ff
+    Time Units = 1ns
+    Dynamic Power Units = 1uW    (derived from V,C,T units)
+    Leakage Power Units = 1nW
+
+
+  Cell Internal Power  = 165.9308 uW   (54%)
+  Net Switching Power  = 143.9013 uW   (46%)
+                         ---------
+Total Dynamic Power    = 309.8322 uW  (100%)
+
+Cell Leakage Power     =  93.7247 uW
+
+1
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : FIR_filter
+Version: Z-2007.03-SP1
+Date   : Thu Oct 26 23:19:33 2017
+****************************************
+
+Operating Conditions: typical   Library: NangateOpenCellLibrary
+Wire Load Model Mode: top
+
+  Startpoint: Coeffs[18] (input port clocked by MY_CLK)
+  Endpoint: DOUT[17] (output port clocked by MY_CLK)
+  Path Group: MY_CLK
+  Path Type: max
+
+  Des/Clust/Port     Wire Load Model       Library
+  ------------------------------------------------
+  FIR_filter         5K_hvratio_1_1        NangateOpenCellLibrary
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MY_CLK (rise edge)                                0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  input external delay                                    0.50       0.50 r
+  Coeffs[18] (in)                                         0.00       0.50 r
+  Single_cell_1/Bi[0] (Cell_Nb9_Ord8_6)                   0.00       0.50 r
+  Single_cell_1/Product/in_b[0] (mult_n_Nb9_6)            0.00       0.50 r
+  Single_cell_1/Product/mult_21/b[0] (mult_n_Nb9_6_DW_mult_tc_0)
+                                                          0.00       0.50 r
+  Single_cell_1/Product/mult_21/U420/ZN (INV_X1)          0.04       0.54 f
+  Single_cell_1/Product/mult_21/U480/ZN (NOR3_X1)         0.08       0.62 r
+  Single_cell_1/Product/mult_21/U500/ZN (XNOR2_X1)        0.07       0.69 r
+  Single_cell_1/Product/mult_21/U499/ZN (XNOR2_X1)        0.06       0.75 r
+  Single_cell_1/Product/mult_21/U515/ZN (XNOR2_X1)        0.06       0.82 r
+  Single_cell_1/Product/mult_21/U513/ZN (XNOR2_X1)        0.04       0.85 f
+  Single_cell_1/Product/mult_21/U600/ZN (AOI221_X1)       0.07       0.93 r
+  Single_cell_1/Product/mult_21/U594/ZN (INV_X1)          0.02       0.95 f
+  Single_cell_1/Product/mult_21/U598/ZN (OAI21_X1)        0.04       0.99 r
+  Single_cell_1/Product/mult_21/U599/ZN (OAI222_X1)       0.06       1.05 f
+  Single_cell_1/Product/mult_21/U593/ZN (OAI21_X1)        0.05       1.10 r
+  Single_cell_1/Product/mult_21/U552/ZN (INV_X1)          0.03       1.13 f
+  Single_cell_1/Product/mult_21/U479/ZN (NOR2_X1)         0.04       1.17 r
+  Single_cell_1/Product/mult_21/U583/ZN (AOI21_X1)        0.03       1.19 f
+  Single_cell_1/Product/mult_21/U545/ZN (INV_X1)          0.03       1.22 r
+  Single_cell_1/Product/mult_21/U546/ZN (OAI21_X1)        0.04       1.26 f
+  Single_cell_1/Product/mult_21/U560/ZN (OAI21_X1)        0.05       1.31 r
+  Single_cell_1/Product/mult_21/U601/ZN (INV_X1)          0.03       1.34 f
+  Single_cell_1/Product/mult_21/U478/ZN (NOR2_X1)         0.04       1.38 r
+  Single_cell_1/Product/mult_21/U554/ZN (AOI21_X1)        0.03       1.41 f
+  Single_cell_1/Product/mult_21/U604/ZN (INV_X1)          0.03       1.44 r
+  Single_cell_1/Product/mult_21/U508/ZN (NAND2_X1)        0.03       1.47 f
+  Single_cell_1/Product/mult_21/U570/ZN (OAI21_X1)        0.04       1.51 r
+  Single_cell_1/Product/mult_21/U537/ZN (INV_X1)          0.03       1.54 f
+  Single_cell_1/Product/mult_21/U448/ZN (OR2_X1)          0.05       1.59 f
+  Single_cell_1/Product/mult_21/U602/ZN (OAI21_X1)        0.04       1.63 r
+  Single_cell_1/Product/mult_21/U603/ZN (OAI21_X1)        0.04       1.68 f
+  Single_cell_1/Product/mult_21/U567/ZN (OAI21_X1)        0.05       1.73 r
+  Single_cell_1/Product/mult_21/U189/ZN (AND2_X1)         0.05       1.78 r
+  Single_cell_1/Product/mult_21/U565/ZN (AOI21_X1)        0.03       1.82 f
+  Single_cell_1/Product/mult_21/U606/ZN (INV_X1)          0.03       1.85 r
+  Single_cell_1/Product/mult_21/U605/ZN (OAI21_X1)        0.04       1.89 f
+  Single_cell_1/Product/mult_21/U252/Z (XOR2_X1)          0.08       1.96 f
+  Single_cell_1/Product/mult_21/U251/Z (XOR2_X1)          0.07       2.04 f
+  Single_cell_1/Product/mult_21/product[15] (mult_n_Nb9_6_DW_mult_tc_0)
+                                                          0.00       2.04 f
+  Single_cell_1/Product/mult_out[15] (mult_n_Nb9_6)       0.00       2.04 f
+  Single_cell_1/Sum/in_b[7] (adder_n_Nb18_6)              0.00       2.04 f
+  Single_cell_1/Sum/add_20/B[7] (adder_n_Nb18_6_DW01_add_0)
+                                                          0.00       2.04 f
+  Single_cell_1/Sum/add_20/U1_7/S (FA_X1)                 0.15       2.19 r
+  Single_cell_1/Sum/add_20/SUM[7] (adder_n_Nb18_6_DW01_add_0)
+                                                          0.00       2.19 r
+  Single_cell_1/Sum/sum_out[7] (adder_n_Nb18_6)           0.00       2.19 r
+  Single_cell_1/ADD_OUT[7] (Cell_Nb9_Ord8_6)              0.00       2.19 r
+  Single_cell_2/SUM_IN[7] (Cell_Nb9_Ord8_5)               0.00       2.19 r
+  Single_cell_2/Sum/in_a[7] (adder_n_Nb18_5)              0.00       2.19 r
+  Single_cell_2/Sum/add_20/A[7] (adder_n_Nb18_5_DW01_add_0)
+                                                          0.00       2.19 r
+  Single_cell_2/Sum/add_20/U1_7/S (FA_X1)                 0.12       2.30 f
+  Single_cell_2/Sum/add_20/SUM[7] (adder_n_Nb18_5_DW01_add_0)
+                                                          0.00       2.30 f
+  Single_cell_2/Sum/sum_out[7] (adder_n_Nb18_5)           0.00       2.30 f
+  Single_cell_2/ADD_OUT[7] (Cell_Nb9_Ord8_5)              0.00       2.30 f
+  Single_cell_3/SUM_IN[7] (Cell_Nb9_Ord8_4)               0.00       2.30 f
+  Single_cell_3/Sum/in_a[7] (adder_n_Nb18_4)              0.00       2.30 f
+  Single_cell_3/Sum/add_20/A[7] (adder_n_Nb18_4_DW01_add_0)
+                                                          0.00       2.30 f
+  Single_cell_3/Sum/add_20/U1_7/CO (FA_X1)                0.10       2.41 f
+  Single_cell_3/Sum/add_20/U1_8/CO (FA_X1)                0.09       2.50 f
+  Single_cell_3/Sum/add_20/U1_9/CO (FA_X1)                0.09       2.59 f
+  Single_cell_3/Sum/add_20/U1_10/CO (FA_X1)               0.09       2.68 f
+  Single_cell_3/Sum/add_20/U1_11/CO (FA_X1)               0.09       2.77 f
+  Single_cell_3/Sum/add_20/U1_12/CO (FA_X1)               0.09       2.87 f
+  Single_cell_3/Sum/add_20/U1_13/CO (FA_X1)               0.09       2.96 f
+  Single_cell_3/Sum/add_20/U1_14/CO (FA_X1)               0.09       3.05 f
+  Single_cell_3/Sum/add_20/U1_15/CO (FA_X1)               0.09       3.14 f
+  Single_cell_3/Sum/add_20/U1_16/S (FA_X1)                0.14       3.28 r
+  Single_cell_3/Sum/add_20/SUM[16] (adder_n_Nb18_4_DW01_add_0)
+                                                          0.00       3.28 r
+  Single_cell_3/Sum/sum_out[16] (adder_n_Nb18_4)          0.00       3.28 r
+  Single_cell_3/ADD_OUT[16] (Cell_Nb9_Ord8_4)             0.00       3.28 r
+  Single_cell_4/SUM_IN[16] (Cell_Nb9_Ord8_3)              0.00       3.28 r
+  Single_cell_4/Sum/in_a[16] (adder_n_Nb18_3)             0.00       3.28 r
+  Single_cell_4/Sum/add_20/A[16] (adder_n_Nb18_3_DW01_add_0)
+                                                          0.00       3.28 r
+  Single_cell_4/Sum/add_20/U1_16/S (FA_X1)                0.12       3.40 f
+  Single_cell_4/Sum/add_20/SUM[16] (adder_n_Nb18_3_DW01_add_0)
+                                                          0.00       3.40 f
+  Single_cell_4/Sum/sum_out[16] (adder_n_Nb18_3)          0.00       3.40 f
+  Single_cell_4/ADD_OUT[16] (Cell_Nb9_Ord8_3)             0.00       3.40 f
+  Single_cell_5/SUM_IN[16] (Cell_Nb9_Ord8_2)              0.00       3.40 f
+  Single_cell_5/Sum/in_a[16] (adder_n_Nb18_2)             0.00       3.40 f
+  Single_cell_5/Sum/add_20/A[16] (adder_n_Nb18_2_DW01_add_0)
+                                                          0.00       3.40 f
+  Single_cell_5/Sum/add_20/U1_16/S (FA_X1)                0.13       3.53 f
+  Single_cell_5/Sum/add_20/SUM[16] (adder_n_Nb18_2_DW01_add_0)
+                                                          0.00       3.53 f
+  Single_cell_5/Sum/sum_out[16] (adder_n_Nb18_2)          0.00       3.53 f
+  Single_cell_5/ADD_OUT[16] (Cell_Nb9_Ord8_2)             0.00       3.53 f
+  Single_cell_6/SUM_IN[16] (Cell_Nb9_Ord8_1)              0.00       3.53 f
+  Single_cell_6/Sum/in_a[16] (adder_n_Nb18_1)             0.00       3.53 f
+  Single_cell_6/Sum/add_20/A[16] (adder_n_Nb18_1_DW01_add_0)
+                                                          0.00       3.53 f
+  Single_cell_6/Sum/add_20/U1_16/CO (FA_X1)               0.10       3.63 f
+  Single_cell_6/Sum/add_20/U1_17/S (FA_X1)                0.13       3.77 r
+  Single_cell_6/Sum/add_20/SUM[17] (adder_n_Nb18_1_DW01_add_0)
+                                                          0.00       3.77 r
+  Single_cell_6/Sum/sum_out[17] (adder_n_Nb18_1)          0.00       3.77 r
+  Single_cell_6/ADD_OUT[17] (Cell_Nb9_Ord8_1)             0.00       3.77 r
+  Single_cell_7/SUM_IN[17] (Cell_Nb9_Ord8_0)              0.00       3.77 r
+  Single_cell_7/Sum/in_a[17] (adder_n_Nb18_0)             0.00       3.77 r
+  Single_cell_7/Sum/add_20/A[17] (adder_n_Nb18_0_DW01_add_0)
+                                                          0.00       3.77 r
+  Single_cell_7/Sum/add_20/U3/ZN (XNOR2_X1)               0.06       3.82 r
+  Single_cell_7/Sum/add_20/U4/ZN (XNOR2_X1)               0.06       3.89 r
+  Single_cell_7/Sum/add_20/SUM[17] (adder_n_Nb18_0_DW01_add_0)
+                                                          0.00       3.89 r
+  Single_cell_7/Sum/sum_out[17] (adder_n_Nb18_0)          0.00       3.89 r
+  Single_cell_7/ADD_OUT[17] (Cell_Nb9_Ord8_0)             0.00       3.89 r
+  DOUT[17] (out)                                          0.02       3.91 r
+  data arrival time                                                  3.91
+
+  clock MY_CLK (rise edge)                                4.48       4.48
+  clock network delay (ideal)                             0.00       4.48
+  clock uncertainty                                      -0.07       4.41
+  output external delay                                  -0.50       3.91
+  data required time                                                 3.91
+  --------------------------------------------------------------------------
+  data required time                                                 3.91
+  data arrival time                                                 -3.91
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.00
+
+
+1
+
+--clock frequency 18 ns  --direct form
