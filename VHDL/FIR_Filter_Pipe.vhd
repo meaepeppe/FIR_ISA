@@ -32,11 +32,14 @@ ARCHITECTURE beh OF FIR_filter_Pipe IS
 	SIGNAL DIN_mult: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	SIGNAL mult_ext: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	
+	SIGNAL VIN_delay_line: STD_LOGIC_VECTOR(Ord DOWNTO 0);
+	SIGNAL VIN_array: STD_LOGIC_VECTOR(2*Ord-1 DOWNTO 0);
+	
 	COMPONENT Cell_Pipe IS 
 		GENERIC(Nb:INTEGER:=9;
 				Ord: INTEGER:=8);
 		PORT(
-			CLK, RST_n, EN : IN STD_LOGIC;
+			CLK, RST_n, EN_1, EN_2 : IN STD_LOGIC;
 			DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 			SUM_IN: IN STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
 			Bi: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
@@ -73,6 +76,20 @@ BEGIN
 	
 	REG_IN_array(0) <= DIN;
 	
+	VIN_array(0) <= VIN;
+	VIN_array(1) <= VIN_delay_line(1);
+	VIN_array(VIN_array'LENGTH-1 DOWNTO 2) <= (OTHERS => '1');
+	
+	VIN_delay_line(0) <= VIN;
+	
+	VIN_Delays: FOR i IN 0 TO Ord-1 GENERATE
+		Single_delay_VIN: Reg_n GENERIC MAP( Nb => 1)
+								PORT MAP(CLK => CLK, RST_n => RST_n, EN => '1',
+								DIN => VIN_delay_line(i DOWNTO i),
+								DOUT => VIN_delay_line(i+1 DOWNTO i+1));
+	
+	END GENERATE;
+	
 	DIN_mult_gen: mult_n GENERIC MAP(Nb => Nb)
 						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => DIN_mult);	
 	
@@ -85,7 +102,9 @@ BEGIN
 	
 	Cells_gen: FOR j IN 0 to Ord-1 GENERATE
 			Single_cell: Cell_Pipe GENERIC MAP(Nb => Nb, Ord => Ord) -- Nb is the # of bits entering the j-th cell
-						PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
+						PORT MAP(CLK => CLK, RST_n => RST_n,
+									EN_1 => VIN_delay_line(j),
+									EN_2 => VIN_delay_line(j+1),
 									DIN => REG_IN_array(j),
 									SUM_IN => SUM_OUT_array(j), 
 									Bi => Bi(j+1), 
@@ -96,7 +115,7 @@ BEGIN
 	Pipe_reg_gen: FOR j IN 0 TO Ord-2 GENERATE
 		
 		Single_Pipe_reg: Reg_n GENERIC MAP (Nb => Pipe_reg_in(j)'LENGTH)
-							PORT MAP( CLK => CLK, RST_n => RST_n, EN => VIN,
+							PORT MAP( CLK => CLK, RST_n => RST_n, EN => VIN_delay_line(j+1),
 									DIN => Pipe_reg_in(j),
 									DOUT => REG_IN_array(j+1));
 		
@@ -104,7 +123,7 @@ BEGIN
 	
 	DOUT <= SUM_OUT_array(Ord);
 	
-	VOUT <= VIN;
+	VOUT <= VIN_delay_line(VIN_delay_line'LENGTH-1);
 	
 END beh;
 

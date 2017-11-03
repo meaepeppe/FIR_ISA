@@ -14,7 +14,7 @@ END ENTITY;
 ARCHITECTURE beh_reg OF Reg_n IS 
 	
 BEGIN
-	PROCESS(CLK)
+	PROCESS(CLK,RST_n)
 	BEGIN
 		IF RST_n = '0' THEN
 				DOUT <= (OTHERS => '0');
