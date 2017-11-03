@@ -123,8 +123,8 @@ test_input_read: PROCESS
 		VIN <= '0';
 		WAIT FOR 60 ns;
 		VIN <= '1';
-		WAIT FOR 600 ns;
-		VIN <= '0';
+		--WAIT FOR 600 ns;
+		--VIN <= '0';
 
 		WAIT;
 	
@@ -141,7 +141,7 @@ test_results_write: PROCESS(CLK)
 				i:= i+1;
 			END IF;
 		END IF;
-		IF CLK'EVENT AND CLK = '1' AND VIN = '1' THEN
+		IF CLK'EVENT AND CLK = '1' AND VOUT = '1' THEN
 			WRITE(oLine, to_integer(signed(filter_out)));
 			WRITELINE(results, oLine);
 		END IF;
