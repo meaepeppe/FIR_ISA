@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 USE STD.textio.all;
 
-ENTITY tb_FIR_filter IS
+ENTITY tb_FIR_filter_pipe IS
 GENERIC(
 	N: integer := 8;
 	Nb: integer := 9;
@@ -11,7 +11,7 @@ GENERIC(
 );
 END ENTITY;
 
-ARCHITECTURE test OF tb_FIR_filter IS
+ARCHITECTURE test OF tb_FIR_filter_pipe IS
 
 	TYPE vector_test IS ARRAY (N_sample-1 DOWNTO 0) OF INTEGER;
 	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
