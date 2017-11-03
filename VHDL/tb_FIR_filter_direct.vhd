@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 USE STD.textio.all;
 
-ENTITY tb_FIR_filter IS
+ENTITY tb_FIR_filter_direct IS
 GENERIC(
 	N: integer := 8;
 	Nb: integer := 9;
@@ -11,7 +11,7 @@ GENERIC(
 );
 END ENTITY;
 
-ARCHITECTURE test OF tb_FIR_filter IS
+ARCHITECTURE test OF tb_FIR_filter_direct IS
 
 	TYPE vector_test IS ARRAY (N_sample-1 DOWNTO 0) OF INTEGER;
 	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
@@ -123,8 +123,8 @@ test_input_read: PROCESS
 		VIN <= '0';
 		WAIT FOR 60 ns;
 		VIN <= '1';
-		WAIT FOR 600 ns;
-		VIN <= '0';
+		--WAIT FOR 600 ns;
+		--VIN <= '0';
 
 		WAIT;
 	
@@ -141,7 +141,7 @@ test_results_write: PROCESS(CLK)
 				i:= i+1;
 			END IF;
 		END IF;
-		IF CLK'EVENT AND CLK = '1' AND VIN = '1' THEN
+		IF CLK'EVENT AND CLK = '1' AND VOUT = '1' THEN
 			WRITE(oLine, to_integer(signed(filter_out)));
 			WRITELINE(results, oLine);
 		END IF;
