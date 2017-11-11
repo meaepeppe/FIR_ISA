@@ -50,8 +50,8 @@ BEGIN
 		mult_out => mult_out
 	);
 	
-	mult_ext(Nb DOWNTO 0) <= mult_out(Nb+Ord DOWNTO Ord);
-	mult_ext(Nb+Ord DOWNTO Nb+1) <= (OTHERS => mult_ext(Nb));
+	mult_ext(Nb+1 DOWNTO 0) <= mult_out(Nb+Ord DOWNTO Ord-1);
+	mult_ext(Nb+Ord DOWNTO Nb+2) <= (OTHERS => mult_ext(Nb+1));
 	
 	sum: adder_n GENERIC MAP(Nb => Ord+Nb+1)
 	PORT MAP
