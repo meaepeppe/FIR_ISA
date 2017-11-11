@@ -146,8 +146,8 @@ BEGIN
 		
 		END GENERATE;
 		
-		sum_outs(i)(0)(Nb DOWNTO 0) <= Pipe_mults(i)(i)(Nb+Ord DOWNTO Ord);
-		sum_outs(i)(0)(Nb+Ord DOWNTO Nb+1) <= (OTHERS => sum_outs(i)(0)(Nb));
+		sum_outs(i)(0)(Nb+1 DOWNTO 0) <= Pipe_mults(i)(i)(Nb+Ord DOWNTO Ord-1);
+		sum_outs(i)(0)(Nb+Ord DOWNTO Nb+2) <= (OTHERS => sum_outs(i)(0)(Nb+1));
 	
 	END GENERATE;
 	

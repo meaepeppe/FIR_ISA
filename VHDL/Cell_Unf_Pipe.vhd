@@ -65,8 +65,8 @@ BEGIN
 						DIN => mult_out,
 						DOUT => mult_reg_out);
 	
-	mult_ext(Nb DOWNTO 0) <= mult_reg_out(Nb+Ord DOWNTO Ord);
-	mult_ext(Nb+Ord DOWNTO Nb+1) <= (OTHERS => mult_ext(Nb));
+	mult_ext(Nb+1 DOWNTO 0) <= mult_reg_out(Nb+Ord DOWNTO Ord-1);
+	mult_ext(Nb+Ord DOWNTO Nb+2) <= (OTHERS => mult_ext(Nb+1));
 	
 	sum_reg: Reg_n GENERIC MAP(Nb => SUM_IN'LENGTH)
 					PORT MAP (CLK => CLK, RST_n => RST_n, EN => EN_1,
