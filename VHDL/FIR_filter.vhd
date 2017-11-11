@@ -76,8 +76,8 @@ BEGIN
 	
 	REG_OUT_array(0) <= DIN;
 	
-	mult_ext(Nb DOWNTO 0) <= DIN_mult (Nb+Ord DOWNTO Ord);
-	mult_ext(2*Nb-1 DOWNTO Nb+1) <= (others => mult_ext(Nb));
+	mult_ext(Nb+1 DOWNTO 0) <= DIN_mult (Nb+Ord DOWNTO Ord-1);
+	mult_ext(2*Nb-1 DOWNTO Nb+2) <= (others => mult_ext(Nb));
 
 	SUM_OUT_array(0) <= mult_ext;
 	

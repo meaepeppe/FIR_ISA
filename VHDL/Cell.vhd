@@ -60,8 +60,8 @@ BEGIN
 	Product: mult_n GENERIC MAP(Nb => Nb)
 					PORT MAP(in_a => REG_OUT_sig, in_b => Bi, mult_out => mult);
 	
-	mult_ext(Nb DOWNTO 0) <= mult (Nb+Ord DOWNTO Ord);
-	mult_ext(2*Nb-1 DOWNTO Nb+1) <= (others => mult_ext(Nb));
+	mult_ext(Nb+1 DOWNTO 0) <= mult (Nb+Ord DOWNTO Ord-1);
+	mult_ext(2*Nb-1 DOWNTO Nb+2) <= (others => mult_ext(Nb));
 	
 	Sum: adder_n GENERIC MAP(Nb => Nb+Ord+1) -- aggiunti 9 bit di guardia
 				 PORT MAP(in_a => SUM_IN, in_b => mult_ext, sum_out => ADD_OUT);
