@@ -63,8 +63,8 @@ BEGIN
 	Mult_Pipe_reg: Reg_n GENERIC MAP(Nb => mult'LENGTH)
 				PORT MAP(DIN => mult, CLK => CLK, RST_n => RST_n, EN => EN_2, DOUT => Last_reg_out);
 	
-	Last_reg_ext(Nb DOWNTO 0) <= Last_reg_out(Nb+Ord DOWNTO Ord);
-	Last_reg_ext(Nb+Ord DOWNTO Nb+1) <= (OTHERS => (Last_reg_ext(Nb)));
+	Last_reg_ext(Nb+1 DOWNTO 0) <= Last_reg_out(Nb+Ord DOWNTO Ord-1);
+	Last_reg_ext(Nb+Ord DOWNTO Nb+2) <= (OTHERS => (Last_reg_ext(Nb+1)));
 	
 	Sum_Pipe_reg: Reg_n GENERIC MAP(Nb => SUM_IN'LENGTH)
 				   PORT MAP(CLK => CLK, RST_n => RST_n, EN => EN_1,

@@ -82,7 +82,7 @@ BEGIN
 	
 	VIN_delay_line(0) <= VIN;
 	
-	VIN_Delays: FOR i IN 0 TO Ord-1 GENERATE
+	VIN_Delays: FOR i IN 0 TO VIN_delay_line'LENGTH-2 GENERATE
 		Single_delay_VIN: Reg_n GENERIC MAP( Nb => 1)
 								PORT MAP(CLK => CLK, RST_n => RST_n, EN => '1',
 								DIN => VIN_delay_line(i DOWNTO i),
@@ -95,8 +95,8 @@ BEGIN
 	
 	
 	
-	mult_ext(Nb DOWNTO 0) <= DIN_mult (Nb+Ord DOWNTO Ord);
-	mult_ext(2*Nb-1 DOWNTO Nb+1) <= (others => mult_ext(Nb));
+	mult_ext(Nb+1 DOWNTO 0) <= DIN_mult (Nb+Ord DOWNTO Ord-1);
+	mult_ext(2*Nb-1 DOWNTO Nb+2) <= (others => mult_ext(Nb+1));
 
 	SUM_OUT_array(0) <= mult_ext;
 	
