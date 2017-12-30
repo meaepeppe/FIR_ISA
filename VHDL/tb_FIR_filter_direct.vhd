@@ -1,21 +1,21 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+LIBRARY ieee;
+LIBRARY work;
+USE ieee.std_logic_1164.all;
+USE ieee.numeric_std.all;
 USE ieee.math_real.all;
+USE work.FIR_constants.all;
 USE STD.textio.all;
 
 ENTITY tb_FIR_filter_direct IS
 GENERIC(
-	N: integer := 8;
-	Nb: integer := 9;
-	Nbmult: integer := 10;
+	N: integer := FIR_ORDER;
+	Nb: integer := NUM_BITS;
+	Nbmult: integer := NUM_BITS_MULT;
 	N_sample: integer := 1000
 );
 END ENTITY;
 
 ARCHITECTURE test OF tb_FIR_filter_direct IS
-
-	CONSTANT Nbadder: INTEGER := Nbmult+1+integer(ceil(log2(real(N))));
 	
 	TYPE vector_test IS ARRAY (N_sample-1 DOWNTO 0) OF INTEGER;
 	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
@@ -37,22 +37,22 @@ ARCHITECTURE test OF tb_FIR_filter_direct IS
 	SIGNAL regToDIN: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL DOUTtoReg: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	
-COMPONENT FIR_filter IS
-GENERIC(
-		Ord: INTEGER := 8; --Filter Order
-		Nb: INTEGER := 9; --# of bits
-		Nbmult: INTEGER := 10 -- # of significant bits from the multiplier
-		);
-PORT(
-	CLK, RST_n:	IN STD_LOGIC;
-	VIN:	IN STD_LOGIC;
-	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
-	VOUT: OUT STD_LOGIC;
-	DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
-	
-);
-END COMPONENT;
+	COMPONENT FIR_filter IS
+	GENERIC(
+			Ord: INTEGER := FIR_ORDER; --Filter Order
+			Nb: INTEGER := NUM_BITS; --# of bits
+			Nbmult: INTEGER := NUM_BITS_MULT -- # of significant bits from the multiplier
+			);
+	PORT(
+		CLK, RST_n:	IN STD_LOGIC;
+		VIN:	IN STD_LOGIC;
+		DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
+		VOUT: OUT STD_LOGIC;
+		DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+		
+	);
+	END COMPONENT;
 	
 	COMPONENT Reg_n IS
 	GENERIC(Nb: INTEGER :=9);
@@ -129,8 +129,9 @@ test_input_read: PROCESS
 		VIN <= '0';
 		WAIT FOR 60 ns;
 		VIN <= '1';
-		--WAIT FOR 600 ns;
-		--VIN <= '0';
+		
+		WAIT FOR 3280 ns;
+		VIN <= '0';
 
 		WAIT;
 	
