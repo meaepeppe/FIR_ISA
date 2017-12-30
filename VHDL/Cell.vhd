@@ -1,28 +1,26 @@
 LIBRARY ieee;
+LIBRARY work;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
 USE ieee.math_real.all;
-
-
+USE work.FIR_constants.all;
 
 ENTITY Cell IS
-	GENERIC(Nb:INTEGER:=9;
-			Ord: INTEGER := 8; -- Filter Order
-			Nbmult: INTEGER := 10
+	GENERIC(Nb:INTEGER:= NUM_BITS;
+			Ord: INTEGER := FIR_ORDER; -- Filter Order
+			Nbmult: INTEGER := NUM_BITS_MULT
 			);
 	PORT(
 		CLK, RST_n, EN : IN STD_LOGIC;
 		DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		SUM_IN: IN STD_LOGIC_VECTOR((Nbmult+1+integer(ceil(log2(real(Ord)))))-1 DOWNTO 0);
+		SUM_IN: IN STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 		Bi: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		REG_OUT : OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0); 
-		ADD_OUT: OUT STD_LOGIC_VECTOR((Nbmult+1+integer(ceil(log2(real(Ord)))))-1 DOWNTO 0) -- aggiunti 9 bit di guardia
+		ADD_OUT: OUT STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0) -- aggiunti 9 bit di guardia
 	);
 END ENTITY;
 
 ARCHITECTURE beh_cell OF Cell IS
-
-	CONSTANT Nbadder : INTEGER := Nbmult+1+integer(ceil(log2(real(Ord))));
 
 	SIGNAL mult: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);

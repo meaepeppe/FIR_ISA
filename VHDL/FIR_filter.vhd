@@ -1,30 +1,28 @@
 LIBRARY ieee;
+LIBRARY work;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
 USE ieee.math_real.all;
+USE work.FIR_constants.all;
 
-ENTITY FIR_filter IS
-GENERIC(
-		Ord: INTEGER := 8; --Filter Order
-		Nb: INTEGER := 9; --# of bits
-		Nbmult: INTEGER := 10 -- # of significant bits from the multiplier
-		);
-PORT(
-	CLK, RST_n:	IN STD_LOGIC;
-	VIN:	IN STD_LOGIC;
-	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
-	VOUT: OUT STD_LOGIC;
-	DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
-	
-);
-END ENTITY;
+	ENTITY FIR_filter IS
+	GENERIC(
+			Ord: INTEGER := FIR_ORDER; --Filter Order
+			Nb: INTEGER := NUM_BITS; --# of bits
+			Nbmult: INTEGER := NUM_BITS_MULT -- # of significant bits from the multiplier
+			);
+	PORT(
+		CLK, RST_n:	IN STD_LOGIC;
+		VIN:	IN STD_LOGIC;
+		DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
+		VOUT: OUT STD_LOGIC;
+		DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+		
+	);
+	END ENTITY;
 
 ARCHITECTURE beh_fir OF FIR_filter IS
-	
-	--CONSTANT Nbadder :INTEGER := Nb + integer(ceil(log2(Ord+1)));
-	
-	CONSTANT Nbadder: INTEGER := Nbmult+1+integer(ceil(log2(real(Ord))));
 	
 	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 	TYPE sig_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
@@ -37,17 +35,17 @@ ARCHITECTURE beh_fir OF FIR_filter IS
 	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 	
 	COMPONENT Cell IS
-		GENERIC(Nb:INTEGER:=9;
-				Ord: INTEGER := 8; -- Filter Order
-				Nbmult: INTEGER := 10
+		GENERIC(Nb:INTEGER:= NUM_BITS;
+				Ord: INTEGER := FIR_ORDER; -- Filter Order
+				Nbmult: INTEGER := NUM_BITS_MULT
 				);
 		PORT(
 			CLK, RST_n, EN : IN STD_LOGIC;
 			DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			SUM_IN: IN STD_LOGIC_VECTOR((Nbmult+1+integer(ceil(log2(real(Ord)))))-1 DOWNTO 0);
+			SUM_IN: IN STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 			Bi: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 			REG_OUT : OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0); 
-			ADD_OUT: OUT STD_LOGIC_VECTOR((Nbmult+1+integer(ceil(log2(real(Ord)))))-1 DOWNTO 0) -- aggiunti 9 bit di guardia
+			ADD_OUT: OUT STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0) -- aggiunti 9 bit di guardia
 		);
 	END COMPONENT;
 
