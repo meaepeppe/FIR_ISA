@@ -16,7 +16,6 @@ END ENTITY;
 ARCHITECTURE beh_adder OF adder_n IS
 	SIGNAL sum_signed: SIGNED(Nb-1 DOWNTO 0);
 BEGIN
-	--sum_signed <= SIGNED(in_a(Nb-1) & in_a) + SIGNED(in_b(Nb-1) & in_b);
 	sum_signed <= SIGNED(in_a) + SIGNED(in_b);
 	sum_out <= STD_LOGIC_VECTOR(sum_signed);
 END beh_adder;

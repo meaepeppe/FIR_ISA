@@ -1,12 +1,16 @@
 LIBRARY ieee;
+LIBRARY work;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
+USE ieee.math_real.all;
+USE work.FIR_constants.all;
 
 ENTITY FIR_Filter_Unf IS
 GENERIC(
-		Ord: INTEGER := 8; --Filter Order
-		Nb: INTEGER := 9; --# of bits
-		UO: INTEGER := 3 -- Unfolding Order
+		Ord: INTEGER := FIR_ORDER; --Filter Order
+		Nb: INTEGER := NUM_BITS; --# of bits
+		UO: INTEGER := UNF_ORDER; -- Unfolding Order
+		Nbmult: INTEGER := NUM_BITS_MULT
 		);
 PORT(
 	CLK, RST_n:	IN STD_LOGIC;
@@ -16,14 +20,14 @@ PORT(
 	DIN_2 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS N+1
 	VOUT: OUT STD_LOGIC;
-	DOUT_0: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
-	DOUT_1: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
-	DOUT_2: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0)
+	DOUT_0: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	DOUT_1: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	DOUT_2: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
 );
 END ENTITY;
 
 ARCHITECTURE beh of FIR_Filter_Unf IS
-
+	
 	TYPE REGS_col IS ARRAY(0 TO Ord) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	TYPE REGS_array IS ARRAY(0 TO UO-1) OF REGS_col;
 	SIGNAL REGS_sig: REGS_array;
@@ -31,7 +35,7 @@ ARCHITECTURE beh of FIR_Filter_Unf IS
 	TYPE coeff_array IS ARRAY(Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL Bi: coeff_array;
 	
-	TYPE sum_out_col IS ARRAY(0 TO Ord) OF STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
+	TYPE sum_out_col IS ARRAY(0 TO Ord) OF STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 	TYPE sum_out_array IS ARRAY(0 TO UO-1) OF sum_out_col;
 	SIGNAL sum_outs: sum_out_array;
 	
@@ -58,18 +62,19 @@ ARCHITECTURE beh of FIR_Filter_Unf IS
 	END COMPONENT;
 	
 	COMPONENT Cell_Unf IS
-	GENERIC
-	(
-		Nb: INTEGER := 9;
-		Ord: INTEGER := 8
-	);
-	PORT
-	(
-		DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		COEFF: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		SUM_IN: IN STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0);
-		SUM_OUT: OUT STD_LOGIC_VECTOR(Ord+Nb DOWNTO 0)
-	);
+		GENERIC
+		(
+			Nb: INTEGER := 9;
+			Ord: INTEGER := 8;
+			Nbmult: INTEGER := 10
+		);
+		PORT
+		(
+			DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+			COEFF: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+			SUM_IN: IN STD_LOGIC_VECTOR(NBADDER-1 DOWNTO 0);
+			SUM_OUT: OUT STD_LOGIC_VECTOR(NBADDER-1 DOWNTO 0)
+		);
 	END COMPONENT;
 
 BEGIN
@@ -88,8 +93,8 @@ BEGIN
 		Single_mult: mult_n GENERIC MAP(Nb => Nb)
 		PORT MAP(in_a => REGs_sig(i)(0), in_b => Bi(0), mult_out => mults_ext(i));
 		
-		sum_outs(i)(0)(Nb+1 DOWNTO 0) <= mults_ext(i)(Nb+Ord DOWNTO Ord-1);
-		sum_outs(i)(0)(Nb+Ord DOWNTO Nb+2) <= (OTHERS => sum_outs(i)(0)(Nb+1));
+		sum_outs(i)(0)(Nbmult-1 DOWNTO 0) <= mults_ext(i)((mults_ext(i)'LENGTH-1) DOWNTO (mults_ext(i)'LENGTH-1)-(Nbmult-1));
+		sum_outs(i)(0)(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => sum_outs(i)(0)(Nbmult-1));
 	
 	END GENERATE;
 	
@@ -101,7 +106,6 @@ BEGIN
 			DOUT => REGS_sig(i)(j+1));
 		END GENERATE;
 	END GENERATE;
-	--PROVVISORIO
 	
 	Cell_col_gen: FOR i IN 0 TO UO-1 GENERATE
 		Cell_gen: FOR j IN 0 TO Ord-1 GENERATE 
@@ -116,9 +120,9 @@ BEGIN
 		END GENERATE;
 	END GENERATE;
 	
-	DOUT_0 <= sum_outs(0)(Ord);
-	DOUT_1 <= sum_outs(1)(Ord);
-	DOUT_2 <= sum_outs(2)(Ord);
+	DOUT_0 <= sum_outs(0)(Ord)(Nb-1 DOWNTO 0);
+	DOUT_1 <= sum_outs(1)(Ord)(Nb-1 DOWNTO 0);
+	DOUT_2 <= sum_outs(2)(Ord)(Nb-1 DOWNTO 0);
 	
 	VOUT <= VIN;
 	

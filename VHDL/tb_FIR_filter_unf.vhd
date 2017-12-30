@@ -1,12 +1,15 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+LIBRARY ieee;
+LIBRARY work;
+USE ieee.std_logic_1164.all;
+USE ieee.numeric_std.all;
+USE ieee.math_real.all;
 USE STD.textio.all;
+USE work.FIR_constants.all;
 
 ENTITY tb_FIR_filter_unf IS
 GENERIC(
-	N: integer := 8;
-	Nb: integer := 9;
+	N: integer := FIR_ORDER;
+	Nb: integer := NUM_BITS;
 	N_sample: integer := 201
 );
 END ENTITY;
@@ -18,7 +21,7 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
 	TYPE sig_array IS ARRAY (N DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
 	TYPE sample_std_array IS ARRAY (2 DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	TYPE sampleout_std_array IS ARRAY (2 DOWNTO 0) OF STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	TYPE sampleout_std_array IS ARRAY (2 DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 
 	FILE inputs: text;
 	FILE coeff_file: text;
@@ -38,11 +41,12 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	SIGNAL regToDIN: sample_std_array;
 	SIGNAL DOUTtoReg: sampleout_std_array;
 	
-	COMPONENT FIR_filter_Unf IS
+	COMPONENT FIR_Filter_Unf IS
 	GENERIC(
-			Ord: INTEGER := 8; --Filter Order
-			Nb: INTEGER := 9; --# of bits
-			UO: INTEGER := 3 -- Unfolding Order
+			Ord: INTEGER := FIR_ORDER; --Filter Order
+			Nb: INTEGER := NUM_BITS; --# of bits
+			UO: INTEGER := UNF_ORDER; -- Unfolding Order
+			Nbmult: INTEGER := NUM_BITS_MULT
 			);
 	PORT(
 		CLK, RST_n:	IN STD_LOGIC;
@@ -52,9 +56,9 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 		DIN_2 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS N+1
 		VOUT: OUT STD_LOGIC;
-		DOUT_0: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
-		DOUT_1: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
-		DOUT_2: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0)
+		DOUT_0: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		DOUT_1: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		DOUT_2: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
 	);
 	END COMPONENT;
 	
@@ -90,12 +94,12 @@ DUT: FIR_filter_Unf
 	
 in_reg_layer: FOR i IN 0 TO 2 GENERATE
 				REG_IN: Reg_n 
-					GENERIC MAP (Nb => Nb)
+					GENERIC MAP (Nb => DINconverted(i)'LENGTH)
 					PORT MAP (CLK => CLK, RST_n => RST_n, EN => VIN_array(1), DIN => DINconverted(i), DOUT => regToDIN(i) );
 				END GENERATE;
 out_reg_layer: FOR i IN 0 TO 2 GENERATE
 				REG_OUT: Reg_n
-					GENERIC MAP (Nb => 2*Nb)
+					GENERIC MAP (Nb => DOUTtoReg(i)'LENGTH)
 					PORT MAP (CLK => CLK, RST_n => RST_n, EN => VOUT, DIN => DOUTtoReg(i), DOUT => filter_out(i) );
 				END GENERATE;
 	
@@ -142,11 +146,9 @@ test_input_read: PROCESS
 		VIN <= '0';
 		WAIT FOR 60 ns;
 		VIN <= '1';
-		--WAIT FOR 600 ns;
-		--VIN <= '0';
 		
-		--WAIT FOR 1345 ns;
-		--VIN <= '0';
+		WAIT FOR 600 ns;
+		VIN <= '0';
 		WAIT;
 	
 	END PROCESS;
@@ -164,13 +166,15 @@ test_results_write: PROCESS(CLK)
 				i:= i+3;
 			END IF;
 		END IF;
-		IF CLK'EVENT AND CLK = '1' AND VOUT = '1' THEN
-			WRITE(oLine, to_integer(signed(filter_out(0))));
-			WRITELINE(results, oLine);
-			WRITE(oLine, to_integer(signed(filter_out(1))));
-			WRITELINE(results, oLine);
-			WRITE(oLine, to_integer(signed(filter_out(2))));
-			WRITELINE(results, oLine);
+		IF CLK'EVENT AND CLK = '1' THEN
+			IF VOUT = '1' THEN
+				WRITE(oLine, to_integer(signed(DOUTtoReg(0))));
+				WRITELINE(results, oLine);
+				WRITE(oLine, to_integer(signed(DOUTtoReg(1))));
+				WRITELINE(results, oLine);
+				WRITE(oLine, to_integer(signed(DOUTtoReg(2))));
+				WRITELINE(results, oLine);
+			END IF;
 		END IF;
 		
 	END PROCESS;
