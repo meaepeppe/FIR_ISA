@@ -1,18 +1,22 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+USE ieee.math_real.all;
 USE STD.textio.all;
 
 ENTITY tb_FIR_filter_direct IS
 GENERIC(
 	N: integer := 8;
 	Nb: integer := 9;
+	Nbmult: integer := 10;
 	N_sample: integer := 1000
 );
 END ENTITY;
 
 ARCHITECTURE test OF tb_FIR_filter_direct IS
 
+	CONSTANT Nbadder: INTEGER := Nbmult+1+integer(ceil(log2(real(N))));
+	
 	TYPE vector_test IS ARRAY (N_sample-1 DOWNTO 0) OF INTEGER;
 	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
 	TYPE sig_array IS ARRAY (N DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
@@ -26,27 +30,29 @@ ARCHITECTURE test OF tb_FIR_filter_direct IS
 	SIGNAL VIN_array: STD_LOGIC_VECTOR(2 DOWNTO 0);
 	SIGNAL sample: SIGNED(Nb-1 DOWNTO 0);
 	SIGNAL DINconverted: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	SIGNAL filter_out: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	SIGNAL filter_out: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL coeffs_std: std_logic_vector ((N+1)*Nb - 1 DOWNTO 0);
 	SIGNAL visual_coeffs_integer: coeffs_array;
 	
 	SIGNAL regToDIN: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	SIGNAL DOUTtoReg: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	SIGNAL DOUTtoReg: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	
-	COMPONENT FIR_filter IS
-	GENERIC(
+COMPONENT FIR_filter IS
+GENERIC(
 		Ord: INTEGER := 8; --Filter Order
-		Nb: INTEGER := 9 --# of bits
+		Nb: INTEGER := 9; --# of bits
+		Nbmult: INTEGER := 10 -- # of significant bits from the multiplier
 		);
-	PORT(
+PORT(
 	CLK, RST_n:	IN STD_LOGIC;
 	VIN:	IN STD_LOGIC;
 	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
 	VOUT: OUT STD_LOGIC;
-	DOUT:	OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
-	);
-	END COMPONENT;
+	DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+	
+);
+END COMPONENT;
 	
 	COMPONENT Reg_n IS
 	GENERIC(Nb: INTEGER :=9);
@@ -76,7 +82,7 @@ REG_IN: Reg_n
 	PORT MAP (CLK => CLK, RST_n => RST_n, EN => VIN_array(1), DIN => DINconverted, DOUT => regToDIN );
 
 REG_OUT: Reg_n
-	GENERIC MAP (Nb => 2*Nb)
+	GENERIC MAP (Nb => Nb)
 	PORT MAP (CLK => CLK, RST_n => RST_n, EN => VOUT, DIN => DOUTtoReg, DOUT => filter_out );
 	
 CLK_gen: PROCESS
@@ -141,9 +147,11 @@ test_results_write: PROCESS(CLK)
 				i:= i+1;
 			END IF;
 		END IF;
-		IF CLK'EVENT AND CLK = '1' AND VOUT = '1' THEN
-			WRITE(oLine, to_integer(signed(filter_out)));
+		IF CLK'EVENT AND CLK = '1' THEN
+			IF VOUT = '1' THEN
+			WRITE(oLine, to_integer(signed(DOUTtoReg)));
 			WRITELINE(results, oLine);
+			END IF;
 		END IF;
 		
 	END PROCESS;
