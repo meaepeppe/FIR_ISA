@@ -1,12 +1,15 @@
 LIBRARY ieee;
+LIBRARY work;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
-
+USE ieee.math_real.all;
+USE work.FIR_constants.all;
 
 ENTITY FIR_filter_Pipe IS
 GENERIC(
-		Ord: INTEGER := 8; --Filter Order
-		Nb: INTEGER := 9 --# of bits
+		Ord: INTEGER := FIR_ORDER; --Filter Order
+		Nb: INTEGER := NUM_BITS; --# of bits
+		Nbmult: INTEGER := NUM_BITS_MULT
 		);
 PORT(
 	CLK, RST_n:	IN STD_LOGIC;
@@ -14,14 +17,13 @@ PORT(
 	DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS Ord+1
 	VOUT: OUT STD_LOGIC;
-	DOUT:	OUT STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0)
-	
+	DOUT:	OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
 );
 END ENTITY;
 
 ARCHITECTURE beh OF FIR_filter_Pipe IS
-	
-	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+
+	TYPE sum_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 	TYPE coeff_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	TYPE sig_array IS ARRAY (Ord-1 DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	
@@ -30,21 +32,24 @@ ARCHITECTURE beh OF FIR_filter_Pipe IS
 	SIGNAL SUM_OUT_array: sum_array;
 	
 	SIGNAL DIN_mult: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
-	SIGNAL mult_ext: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
+	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
+
 	
 	SIGNAL VIN_delay_line: STD_LOGIC_VECTOR(Ord DOWNTO 0);
-	SIGNAL VIN_array: STD_LOGIC_VECTOR(2*Ord-1 DOWNTO 0);
+	--SIGNAL VIN_array: STD_LOGIC_VECTOR(2*Ord-1 DOWNTO 0);
 	
 	COMPONENT Cell_Pipe IS 
-		GENERIC(Nb:INTEGER:=9;
-				Ord: INTEGER:=8);
+		GENERIC(Nb:INTEGER:= NUM_BITS;
+				Ord: INTEGER := FIR_ORDER;
+				Nbmult: INTEGER := NUM_BITS_MULT
+				); 
 		PORT(
-			CLK, RST_n, EN_1, EN_2 : IN STD_LOGIC;
+			CLK, RST_n, EN : IN STD_LOGIC;
 			DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			SUM_IN: IN STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0);
+			SUM_IN: IN STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 			Bi: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			REG_OUT : OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			ADD_OUT: OUT STD_LOGIC_VECTOR(Nb+Ord DOWNTO 0)
+			REG_OUT : BUFFER STD_LOGIC_VECTOR(Nb-1 DOWNTO 0); 
+			ADD_OUT: OUT STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0) 
 		);
 	END COMPONENT;
 	
@@ -76,9 +81,9 @@ BEGIN
 	
 	REG_IN_array(0) <= DIN;
 	
-	VIN_array(0) <= VIN;
-	VIN_array(1) <= VIN_delay_line(1);
-	VIN_array(VIN_array'LENGTH-1 DOWNTO 2) <= (OTHERS => '1');
+	--VIN_array(0) <= VIN;
+	--VIN_array(1) <= VIN_delay_line(1);
+	--VIN_array(VIN_array'LENGTH-1 DOWNTO 2) <= (OTHERS => '1');
 	
 	VIN_delay_line(0) <= VIN;
 	
@@ -95,16 +100,15 @@ BEGIN
 	
 	
 	
-	mult_ext(Nb+1 DOWNTO 0) <= DIN_mult (Nb+Ord DOWNTO Ord-1);
-	mult_ext(2*Nb-1 DOWNTO Nb+2) <= (others => mult_ext(Nb+1));
+	mult_ext(Nbmult-1 DOWNTO 0) <= DIN_mult((DIN_mult'LENGTH-1) DOWNTO (DIN_mult'LENGTH-1)-(Nbmult-1));
+	mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => mult_ext(Nbmult-1));
 
 	SUM_OUT_array(0) <= mult_ext;
 	
 	Cells_gen: FOR j IN 0 to Ord-1 GENERATE
 			Single_cell: Cell_Pipe GENERIC MAP(Nb => Nb, Ord => Ord) -- Nb is the # of bits entering the j-th cell
 						PORT MAP(CLK => CLK, RST_n => RST_n,
-									EN_1 => VIN_delay_line(j),
-									EN_2 => VIN_delay_line(j+1),
+									EN => VIN_delay_line(j),
 									DIN => REG_IN_array(j),
 									SUM_IN => SUM_OUT_array(j), 
 									Bi => Bi(j+1), 
@@ -115,13 +119,13 @@ BEGIN
 	Pipe_reg_gen: FOR j IN 0 TO Ord-2 GENERATE
 		
 		Single_Pipe_reg: Reg_n GENERIC MAP (Nb => Pipe_reg_in(j)'LENGTH)
-							PORT MAP( CLK => CLK, RST_n => RST_n, EN => VIN_delay_line(j+1),
+							PORT MAP( CLK => CLK, RST_n => RST_n, EN => VIN_delay_line(j),
 									DIN => Pipe_reg_in(j),
 									DOUT => REG_IN_array(j+1));
 		
 	END GENERATE;
 	
-	DOUT <= SUM_OUT_array(Ord);
+	DOUT <= SUM_OUT_array(Ord)(Nb-1 DOWNTO 0);
 	
 	VOUT <= VIN_delay_line(VIN_delay_line'LENGTH-1);
 	
