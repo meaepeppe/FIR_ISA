@@ -2,7 +2,6 @@ LIBRARY ieee;
 LIBRARY work;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
-USE ieee.math_real.all;
 USE work.FIR_constants.all;
 
 ENTITY FIR_Filter_Unf IS
@@ -95,24 +94,30 @@ BEGIN
 	
 	END GENERATE;
 	
-	REGS_col_gen: FOR i IN 0 TO UO-1 GENERATE
-			REGS_gen: FOR j IN 0 TO ((i+Ord/UO) -1) GENERATE
+	REGS_col_gen: FOR Xi IN 0 TO UO-1 GENERATE -- Xi = Row Index of Input signals : 0, 1, ..., UO-1
+			REGS_gen: FOR Xj IN 0 TO ((Xi+Ord)/UO)-1 GENERATE  -- Column Index of Input Signals: (Xi+1)/UO, (Xi+1+1)/UO, ..., (Xi+Ord)/UO
 			Single_Reg: Reg_n GENERIC MAP(Nb => Nb)
 			PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
-			DIN => REGS_sig(i)(j),
-			DOUT => REGS_sig(i)(j+1));
+			DIN => REGS_sig(Xi)(Xj),
+			DOUT => REGS_sig(Xi)(Xj+1));
 		END GENERATE;
 	END GENERATE;
 	
-	Cell_col_gen: FOR i IN 0 TO UO-1 GENERATE
-		Cell_gen: FOR j IN 0 TO Ord-1 GENERATE 
+	Cell_col_gen: FOR Xi IN 0 TO UO-1 GENERATE -- Xi = Row Index of Input signals : 0, 1, ..., UO-1
+		Cell_gen: FOR Cj IN 0 TO Ord-1 GENERATE -- Cj = Column Index of Basic Cells: 0, 1, ..., Ord-1
+		
+			CONSTANT Xj : INTEGER := ((Xi+Cj+1)/UO);  -- Column Index of Input Signals: (Xi+1)/UO, (Xi+1+1)/UO, ..., (Xi+Ord)/UO
+			CONSTANT Ci : INTEGER := ((Xi+Cj+1) MOD UO); -- Row Index of Basic Cells: 0, 1, ..., UO-1
+			
+		BEGIN
+		
 		Single_Cell: Cell_Unf GENERIC MAP(Nb => Nb, Ord => Ord)
 		PORT MAP
 		(
-			DIN =>  REGS_sig(i)((i+j+1)/UO),
-			COEFF => Bi(j+1),
-			SUM_IN => sum_outs((i+j+1) MOD UO)(j),
-			SUM_OUT => sum_outs((i+j+1) MOD UO)(j+1)
+			DIN =>  REGS_sig(Xi)(Xj),
+			COEFF => Bi(Cj+1),
+			SUM_IN => sum_outs(Ci)(Cj),
+			SUM_OUT => sum_outs(Ci)(Cj+1)
 		);
 		END GENERATE;
 	END GENERATE;
