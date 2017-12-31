@@ -15,14 +15,10 @@ GENERIC(
 PORT(
 	CLK, RST_n:	IN STD_LOGIC;
 	VIN:	IN STD_LOGIC;
-	DIN_0 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	DIN_1 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	DIN_2 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+	DIN: 	IN IO_array;
 	Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS N+1
-	VOUT: OUT STD_LOGIC;
-	DOUT_0: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	DOUT_1: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	DOUT_2: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+	VOUT:	OUT STD_LOGIC;
+	DOUT:	OUT IO_array 
 );
 END ENTITY;
 
@@ -78,9 +74,10 @@ ARCHITECTURE beh of FIR_Filter_Unf IS
 	END COMPONENT;
 
 BEGIN
-	REGs_sig(0)(0) <= DIN_0;
-	REGs_sig(1)(0) <= DIN_1;
-	REGs_sig(2)(0) <= DIN_2;
+
+	DIN_link: FOR i IN 0 TO UO-1 GENERATE
+	REGs_sig(i)(0) <= DIN(i);
+	END GENERATE;
 
 	Coeffs_gen: FOR i IN 0 TO Ord GENERATE
 	
@@ -120,9 +117,9 @@ BEGIN
 		END GENERATE;
 	END GENERATE;
 	
-	DOUT_0 <= sum_outs(0)(Ord)(Nb-1 DOWNTO 0);
-	DOUT_1 <= sum_outs(1)(Ord)(Nb-1 DOWNTO 0);
-	DOUT_2 <= sum_outs(2)(Ord)(Nb-1 DOWNTO 0);
+	DOUT_link: FOR i IN 0 TO UO-1 GENERATE
+	DOUT(i) <= sum_outs(i)(Ord)(Nb-1 DOWNTO 0);
+	END GENERATE;
 	
 	VOUT <= VIN;
 	

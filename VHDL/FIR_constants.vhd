@@ -1,4 +1,5 @@
 LIBRARY ieee;
+USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
 USE ieee.math_real.all;
 
@@ -9,6 +10,7 @@ PACKAGE FIR_constants IS
 	CONSTANT UNF_ORDER: INTEGER := 3;
 	CONSTANT NUM_BITS_MULT: INTEGER := 10;
 	CONSTANT Nbadder: INTEGER:= NUM_BITS_MULT + 1 + integer(ceil(log2(real(FIR_ORDER))));
+	TYPE IO_array IS ARRAY(UNF_ORDER-1 DOWNTO 0) OF STD_LOGIC_VECTOR(NUM_BITS-1 DOWNTO 0);
 	
 END FIR_constants;
 

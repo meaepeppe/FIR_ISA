@@ -10,6 +10,7 @@ ENTITY tb_FIR_filter_unf IS
 GENERIC(
 	N: integer := FIR_ORDER;
 	Nb: integer := NUM_BITS;
+	UO: INTEGER := UNF_ORDER;
 	N_sample: integer := 201
 );
 END ENTITY;
@@ -20,8 +21,6 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	TYPE vector_test IS ARRAY (N_sample-1 DOWNTO 0) OF INTEGER;
 	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
 	TYPE sig_array IS ARRAY (N DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
-	TYPE sample_std_array IS ARRAY (2 DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	TYPE sampleout_std_array IS ARRAY (2 DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 
 	FILE inputs: text;
 	FILE coeff_file: text;
@@ -31,15 +30,12 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	SIGNAL CLK, RST_n: STD_LOGIC;
 	SIGNAL VIN, VOUT: STD_LOGIC;
 	SIGNAL sample: sample_sign_array;
-	SIGNAL DINconverted: sample_std_array;
-	SIGNAL filter_out: sampleout_std_array;
 	SIGNAL coeffs_std: std_logic_vector ((N+1)*Nb - 1 DOWNTO 0);
 	SIGNAL visual_coeffs_integer: coeffs_array;
 	
 	SIGNAL VIN_array: STD_LOGIC_VECTOR(2 DOWNTO 0);
 		
-	SIGNAL regToDIN: sample_std_array;
-	SIGNAL DOUTtoReg: sampleout_std_array;
+	SIGNAL regToDIN, DOUTtoReg, DINconverted, filter_out: IO_array;
 	
 	COMPONENT FIR_Filter_Unf IS
 	GENERIC(
@@ -51,14 +47,10 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	PORT(
 		CLK, RST_n:	IN STD_LOGIC;
 		VIN:	IN STD_LOGIC;
-		DIN_0 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		DIN_1 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		DIN_2 : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
+		DIN: 	IN IO_array;
 		Coeffs:	IN	STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0); --# of coeffs IS N+1
-		VOUT: OUT STD_LOGIC;
-		DOUT_0: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		DOUT_1: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		DOUT_2: OUT STD_LOGIC_VECTOR(Nb-1 DOWNTO 0)
+		VOUT:	OUT STD_LOGIC;
+		DOUT:	OUT IO_array 
 	);
 	END COMPONENT;
 	
@@ -74,9 +66,9 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	
 BEGIN
 
-DINconverted(0) <= std_logic_vector(sample(0));
-DINconverted(1) <= std_logic_vector(sample(1));
-DINconverted(2) <= std_logic_vector(sample(2));
+Conv_DIN: FOR i IN 0 TO UO-1 GENERATE
+	DINconverted(i) <= std_logic_vector(sample(i));
+END GENERATE;
 
 VIN_array(0) <= VIN;
 
@@ -87,17 +79,15 @@ VIN_REGS:	FOR i IN 0 TO 1 GENERATE
 	END GENERATE;
 
 DUT: FIR_filter_Unf
-	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN_array(2), DIN_0 => regToDIN(0),  
-						DIN_1 => regToDIN(1), DIN_2 => regToDIN(2), 
-						Coeffs => coeffs_std, VOUT => VOUT, DOUT_0 => DOUTtoReg(0),
-						DOUT_1 => DOUTtoReg(1), DOUT_2 => DOUTtoReg(2));
+	PORT MAP (CLK => CLK, RST_n => RST_n, VIN => VIN_array(2), DIN => regToDIN,  
+						Coeffs => coeffs_std, VOUT => VOUT, DOUT => DOUTtoReg);
 	
-in_reg_layer: FOR i IN 0 TO 2 GENERATE
+in_reg_layer: FOR i IN 0 TO UO-1 GENERATE
 				REG_IN: Reg_n 
 					GENERIC MAP (Nb => DINconverted(i)'LENGTH)
 					PORT MAP (CLK => CLK, RST_n => RST_n, EN => VIN_array(1), DIN => DINconverted(i), DOUT => regToDIN(i) );
 				END GENERATE;
-out_reg_layer: FOR i IN 0 TO 2 GENERATE
+out_reg_layer: FOR i IN 0 TO UO-1 GENERATE
 				REG_OUT: Reg_n
 					GENERIC MAP (Nb => DOUTtoReg(i)'LENGTH)
 					PORT MAP (CLK => CLK, RST_n => RST_n, EN => VOUT, DIN => DOUTtoReg(i), DOUT => filter_out(i) );
