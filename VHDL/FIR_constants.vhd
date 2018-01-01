@@ -8,7 +8,7 @@ PACKAGE FIR_constants IS
 	CONSTANT FIR_ORDER: INTEGER := 8;
 	CONSTANT UNF_ORDER: INTEGER := 3;
 	CONSTANT NUM_BITS_MULT: INTEGER := 10;
-	CONSTANT Nbadder: INTEGER:= NUM_BITS_MULT + 1 + integer(ceil(log2(real(FIR_ORDER))));
+	CONSTANT Nbadder: INTEGER:= NUM_BITS_MULT + integer(floor(log2(real(FIR_ORDER+1))));
 	
 END FIR_constants;
 
