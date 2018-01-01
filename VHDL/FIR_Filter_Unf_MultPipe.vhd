@@ -23,7 +23,7 @@ PORT(
 END ENTITY;
 
 ARCHITECTURE beh of FIR_Filter_Unf_MultPipe IS
-
+	
 	TYPE REGS_col IS ARRAY(0 TO ((UO-1+Ord)/UO)) OF STD_LOGIC_VECTOR(DIN(0)'LENGTH-1 DOWNTO 0);
 	TYPE REGS_array IS ARRAY(0 TO UO-1) OF REGS_col;
 	SIGNAL REGS_sig: REGS_array;
@@ -38,17 +38,22 @@ ARCHITECTURE beh of FIR_Filter_Unf_MultPipe IS
 	TYPE mult_ext_array IS ARRAY(0 TO UO-1) OF STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	SIGNAL mults_out: mult_ext_array;
 	
-	TYPE Pipe_out_col IS ARRAY (UO DOWNTO 0) OF STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0); --CONTROLLARE
-	TYPE Pipe_out_row IS ARRAY (UO-1 DOWNTO 0) OF Pipe_out_col;
-	SIGNAL Pipe_outs: Pipe_out_row;
+	TYPE Pipe_out_col IS ARRAY (UO DOWNTO 0) OF STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);  -- (UO-1) are the max number of pipe stages after the array  
+	TYPE Pipe_out_row IS ARRAY (UO-1 DOWNTO 0) OF Pipe_out_col;						   -- of cells, then + 1 for the very last
+	SIGNAL Pipe_outs: Pipe_out_row;													   -- pipe stage, so in total: UO pipe stages.
+																					   -- Then, for UO stages, UO+1 signals needed, so in the end:
+																					   -- (UO+1-1 DOWNTO 0)
 	
-	TYPE Pipe_mult_col IS ARRAY (UO-1 DOWNTO 0) OF STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0); --CONTROLLARE
+	TYPE Pipe_mult_col IS ARRAY (UO-1 DOWNTO 0) OF STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0); 
 	TYPE Pipe_mult_row IS ARRAY (UO-1 DOWNTO 0) OF Pipe_mult_col;
 	SIGNAL Pipe_mults: Pipe_mult_row;
 	
-	TYPE VIN_Delay_col IS ARRAY(UO-1 DOWNTO 0) OF STD_LOGIC_VECTOR(Ord+UO DOWNTO 0); -- Total number of general pipe stages: 
-	SIGNAL VIN_delay_line: VIN_Delay_col; 										 -- Ord+UO, so Ord+UO+1 signals are required
-	
+	TYPE VIN_Delay_col IS ARRAY(UO-1 DOWNTO 0) OF STD_LOGIC_VECTOR(CELLS_PIPE_STAGES+1 DOWNTO 0); -- For N stages, N+1 signals are required; 
+	SIGNAL VIN_delay_line: VIN_Delay_col; 														 -- N here is CELLS_PIPE_STAGES = Ord + UO -1,
+																								 -- plus 1 for the last pipeline at the output,
+																								 -- so in total we have:
+																								 -- ((CELLS_PIPE_STAGES+1) +1 -1) DOWNTO 0 =
+																								 -- = (Ord + UO) DOWNTO 0 
 	TYPE REGS_Delay_wires IS ARRAY(Ord+UO-2 DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	TYPE REGS_Delay_col IS ARRAY(((Ord+UO-1)/UO) DOWNTO 0) OF REGS_Delay_wires;
 	TYPE REGS_Delay_array IS ARRAY(UO-1 DOWNTO 0) OF REGS_Delay_Col;
@@ -180,7 +185,6 @@ BEGIN
 		REGS_Delay_col_gen: FOR Xj IN ((Xi+1)/UO) TO ((Xi+Ord)/UO) GENERATE -- Xj = Column Index of Input signals: 0, 1, ..., Ord-1
 		
 				CONSTANT Cj_max: INTEGER := (((Xj+1)*UO) -2 -Xi); --Cj_max for each xj
-				--CONSTANT Cj_max : INTEGER := (idx_tmp - (idx_tmp - Ord)*(idx_tmp/Ord)); --Cj_max for each Xj
 				CONSTANT Xi_max: INTEGER := ((Xi+Cj_max+1) MOD UO);
 				
 			BEGIN
@@ -240,10 +244,9 @@ BEGIN
 	
 		Pipe_outs(i)(0) <= sum_outs(i)(Ord);
 		
-
-			Pipe_out_cols_gen: FOR j IN 0 TO (UO-1)-i GENERATE
+			Pipe_out_cols_gen: FOR j IN 0 TO ((UO-1)-1-i) GENERATE
 			
-				Pipe_out_cond_0:IF (j < UO-1-i) GENERATE
+				Pipe_out_cond:IF (j >= 0) GENERATE
 				
 					Single_Pipe_out: pipeline GENERIC MAP(Nb => Pipe_outs(i)(j)'LENGTH, pipe_d => pipe_d +1)
 										PORT MAP(
@@ -255,19 +258,27 @@ BEGIN
 										DOUT => Pipe_outs(i)(j+1));
 										
 				END GENERATE;
-				
-				Pipe_out_cond_1: IF(j = UO-1-i) GENERATE
-				
-					Single_Pipe_out: pipeline GENERIC MAP(Nb => Pipe_outs(i)(j)'LENGTH, pipe_d => pipe_d)
-										PORT MAP(
-										CLK => CLK,
-										RST_n => RST_n,
-										enable_in => VIN_delay_line(i)(Ord+j+i),
-										enable_out => VIN_delay_line(i)(Ord+j+i+1),
-										DIN => Pipe_outs(i)(j),
-										DOUT => Pipe_outs(i)(j+1));
-				END GENERATE;
 			END GENERATE;
+	END GENERATE;
+	
+	Pipe_out_cond_1: IF (pipe_d > 0) GENERATE
+		Last_Pipe_out: FOR i IN 0 TO UO-1 GENERATE
+
+			Single_Pipe_out: pipeline GENERIC MAP(Nb => Pipe_outs(0)(0)'LENGTH, pipe_d => pipe_d)
+								PORT MAP(
+								CLK => CLK,
+								RST_n => RST_n,
+								enable_in => VIN_delay_line(i)(CELLS_PIPE_STAGES), 
+								enable_out => VIN_delay_line(i)(CELLS_PIPE_STAGES + 1),
+								DIN => Pipe_outs(i)(UO-1-i),
+								DOUT => Pipe_outs(i)(UO-i));
+		END GENERATE;
+	END GENERATE;
+	
+	Pipe_out_cond_0: IF (pipe_d = 0) GENERATE
+	
+			VIN_delay_line(0)(CELLS_PIPE_STAGES + 1) <= VIN_delay_line(0)(CELLS_PIPE_STAGES);
+			
 	END GENERATE;
 	
 	DOUT_link: FOR i IN 0 TO UO-1 GENERATE
