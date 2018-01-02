@@ -5,13 +5,6 @@ USE ieee.numeric_std.all;
 USE work.FIR_constants.all;
 
 ENTITY Cell_Unf_Pipe IS
-	GENERIC
-	(
-		Nb: INTEGER := NUM_BITS;
-		Ord: INTEGER := FIR_ORDER;
-		Nbmult: INTEGER := NUM_BITS_MULT;
-		pipe_d: INTEGER := PIPE_MULT_DEPTH
-	);
 	PORT
 	(
 		CLK, RST_n: IN STD_LOGIC;
@@ -80,8 +73,14 @@ BEGIN
 		mult_out => mult_out
 	);
 	
-	mult_ext(Nbmult-1 DOWNTO 0) <= mult_out((mult_out'LENGTH-1) DOWNTO (mult_out'LENGTH-1)-(Nbmult-1));
-	mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => mult_ext(Nbmult-1));
+	mult_out_extension_0: IF (Nbadder <= Nbmult) GENERATE
+		mult_ext <= mult_out((mult_out'LENGTH -(Nbmult - Nbadder) -1) DOWNTO (mult_out'LENGTH-1)-(Nbmult-1));
+	END GENERATE;
+	
+	mult_out_extension_1: IF (Nbadder > Nbmult) GENERATE
+		mult_ext(Nbmult-1 DOWNTO 0) <= mult_out((mult_out'LENGTH-1) DOWNTO (mult_out'LENGTH-1)-(Nbmult-1));
+		mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => mult_ext(Nbmult-1));
+	END GENERATE;
 	
 	sum_pipe: pipeline GENERIC MAP(Nb => SUM_IN'LENGTH, pipe_d => pipe_d + 1)
 					PORT MAP (

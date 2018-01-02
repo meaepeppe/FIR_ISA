@@ -5,13 +5,6 @@ USE ieee.numeric_std.all;
 USE work.FIR_constants.all;
 
 ENTITY FIR_Filter_Unf_MultPipe IS
-GENERIC(
-		Ord: INTEGER := FIR_ORDER; --Filter Order
-		Nb: INTEGER := NUM_BITS; --# of bits
-		UO: INTEGER := UNF_ORDER; -- Unfolding Order
-		Nbmult: INTEGER := NUM_BITS_MULT;
-		pipe_d : INTEGER := PIPE_MULT_DEPTH
-		);
 PORT(
 	CLK, RST_n:	IN STD_LOGIC;
 	VIN:	IN STD_LOGIC;
@@ -81,13 +74,6 @@ ARCHITECTURE beh of FIR_Filter_Unf_MultPipe IS
 	END COMPONENT;
 	
 	COMPONENT Cell_Unf_Pipe IS
-	GENERIC
-	(
-		Nb: INTEGER := NUM_BITS;
-		Ord: INTEGER := FIR_ORDER;
-		Nbmult: INTEGER := NUM_BITS_MULT;
-		pipe_d: INTEGER := PIPE_MULT_DEPTH
-	);
 	PORT
 	(
 		CLK, RST_n: IN STD_LOGIC;
@@ -176,9 +162,14 @@ BEGIN
 			END GENERATE;
 		END GENERATE;
 		
-		sum_outs(i)(0)(Nbmult-1 DOWNTO 0) <= Pipe_mults(i)(i)((Pipe_mults(i)(i)'LENGTH-1) DOWNTO (Pipe_mults(i)(i)'LENGTH-1)-(Nbmult-1));
-		sum_outs(i)(0)(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => sum_outs(i)(0)(Nbmult-1));
-	
+		Pipe_mults_extension_0: IF (Nbadder <= Nbmult) GENERATE
+			sum_outs(i)(0) <= Pipe_mults(i)(i)((Pipe_mults(i)(i)'LENGTH -(Nbmult - Nbadder) -1) DOWNTO (Pipe_mults(i)(i)'LENGTH-1)-(Nbmult-1));
+		END GENERATE;
+		Pipe_mults_extension_1: IF (Nbadder > Nbmult) GENERATE
+			sum_outs(i)(0)(Nbmult-1 DOWNTO 0) <= Pipe_mults(i)(i)((Pipe_mults(i)(i)'LENGTH-1) DOWNTO (Pipe_mults(i)(i)'LENGTH-1)-(Nbmult-1));
+			sum_outs(i)(0)(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => sum_outs(i)(0)(Nbmult-1));
+		END GENERATE;
+		
 	END GENERATE;
 
 	REGS_Delay_row_gen: FOR Xi IN 0 TO UO-1 GENERATE -- Xi = Row Index of Input signals : 0, 1, ..., UO-1
@@ -223,8 +214,7 @@ BEGIN
 			
 		BEGIN
 		
-			Single_Cell: Cell_Unf_Pipe GENERIC MAP(Nb => Nb, Ord => Ord, pipe_d => pipe_d)
-			PORT MAP
+			Single_Cell: Cell_Unf_Pipe PORT MAP
 			(	
 				CLK => CLK,
 				RST_n => RST_n, 
@@ -244,10 +234,9 @@ BEGIN
 	
 		Pipe_outs(i)(0) <= sum_outs(i)(Ord);
 		
+		Pipe_out_cond:IF (i < UO-1) GENERATE
 			Pipe_out_cols_gen: FOR j IN 0 TO ((UO-1)-1-i) GENERATE
-			
-				Pipe_out_cond:IF (j >= 0) GENERATE
-				
+	
 					Single_Pipe_out: pipeline GENERIC MAP(Nb => Pipe_outs(i)(j)'LENGTH, pipe_d => pipe_d +1)
 										PORT MAP(
 										CLK => CLK,
@@ -257,12 +246,12 @@ BEGIN
 										DIN => Pipe_outs(i)(j),
 										DOUT => Pipe_outs(i)(j+1));
 										
-				END GENERATE;
 			END GENERATE;
+		END GENERATE;
 	END GENERATE;
 	
-	Pipe_out_cond_1: IF (pipe_d > 0) GENERATE
-		Last_Pipe_out: FOR i IN 0 TO UO-1 GENERATE
+	Last_Pipe_out_cond_1: IF (pipe_d > 0) GENERATE
+		Last_Pipe_out_1: FOR i IN 0 TO UO-1 GENERATE
 
 			Single_Pipe_out: pipeline GENERIC MAP(Nb => Pipe_outs(0)(0)'LENGTH, pipe_d => pipe_d)
 								PORT MAP(
@@ -275,10 +264,11 @@ BEGIN
 		END GENERATE;
 	END GENERATE;
 	
-	Pipe_out_cond_0: IF (pipe_d = 0) GENERATE
-	
-			VIN_delay_line(0)(CELLS_PIPE_STAGES + 1) <= VIN_delay_line(0)(CELLS_PIPE_STAGES);
-			
+	Last_Pipe_out_cond_0: IF (pipe_d = 0) GENERATE
+		Last_Pipe_out_0: FOR i IN 0 TO UO-1 GENERATE
+			VIN_delay_line(i)(CELLS_PIPE_STAGES + 1) <= VIN_delay_line(i)(CELLS_PIPE_STAGES);
+			Pipe_outs(i)(UO-i) <= Pipe_outs(i)(UO-1-i);
+		END GENERATE;
 	END GENERATE;
 	
 	DOUT_link: FOR i IN 0 TO UO-1 GENERATE
