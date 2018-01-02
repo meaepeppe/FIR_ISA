@@ -6,10 +6,6 @@ USE ieee.math_real.all;
 USE work.FIR_constants.all;
 
 ENTITY Cell_Pipe IS 
-	GENERIC(Nb:INTEGER:= NUM_BITS;
-			Ord: INTEGER := FIR_ORDER;
-			Nbmult: INTEGER := NUM_BITS_MULT
-			); 
 	PORT(
 		CLK, RST_n, EN : IN STD_LOGIC;
 		DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
@@ -65,10 +61,16 @@ BEGIN
 
 	Product: mult_n GENERIC MAP(Nb => Nb)
 					PORT MAP(in_a => Reg_buf, in_b => Bi, mult_out => mult);
-	
-	mult_ext(Nbmult-1 DOWNTO 0) <= mult((mult'LENGTH-1) DOWNTO (mult'LENGTH-1)-(Nbmult-1));
-	mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => (mult_ext(Nbmult-1)));
-	
+					
+	mult_extension_0: IF (Nbadder <= Nbmult) GENERATE
+			mult_ext <= mult ((mult'LENGTH - (Nbmult - Nbadder) -1) DOWNTO (mult'LENGTH)-1-(Nbmult-1));
+		END GENERATE;
+		
+	mult_extension_1: IF (Nbadder > Nbmult) GENERATE
+			mult_ext(Nbmult-1 DOWNTO 0) <= mult((mult'LENGTH-1) DOWNTO (mult'LENGTH-1)-(Nbmult-1));
+			mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => (mult_ext(Nbmult-1)));
+		END GENERATE;
+		
 	Mult_Pipe_reg: Reg_n GENERIC MAP(Nb => mult_ext'LENGTH)
 				PORT MAP(DIN => mult_ext, CLK => CLK, RST_n => RST_n, EN => EN, DOUT => Last_reg_out);
 	
