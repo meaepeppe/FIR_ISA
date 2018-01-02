@@ -8,9 +8,6 @@ USE work.FIR_constants.all;
 
 ENTITY tb_FIR_filter_unf IS
 GENERIC(
-	N: integer := FIR_ORDER;
-	Nb: integer := NUM_BITS;
-	UO: INTEGER := UNF_ORDER;
 	N_sample: integer := 202
 );
 END ENTITY;
@@ -19,18 +16,21 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 
 	TYPE sample_sign_array IS ARRAY (UO-1 DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
 	TYPE vector_test IS ARRAY (N_sample-1 DOWNTO 0) OF INTEGER;
-	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
-	TYPE sig_array IS ARRAY (N DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
+	TYPE coeffs_array IS ARRAY (Ord DOWNTO 0) OF INTEGER;
+	TYPE sig_array IS ARRAY (Ord DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
 
 	FILE inputs: text;
 	FILE coeff_file: text;
 	FILE results: text;
-	SHARED VARIABLE input_samples: vector_test;
+	FILE c_outs_file: text;
+	FILE output_diffs: text;
+	
+	SHARED VARIABLE input_samples, c_outputs: vector_test;
 
 	SIGNAL CLK, RST_n: STD_LOGIC;
 	SIGNAL VIN, VOUT: STD_LOGIC;
 	SIGNAL sample: sample_sign_array;
-	SIGNAL coeffs_std: std_logic_vector ((N+1)*Nb - 1 DOWNTO 0);
+	SIGNAL coeffs_std: std_logic_vector ((Ord+1)*Nb - 1 DOWNTO 0);
 	SIGNAL visual_coeffs_integer: coeffs_array;
 	
 	SIGNAL VIN_array: STD_LOGIC_VECTOR(2 DOWNTO 0);
@@ -38,12 +38,6 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	SIGNAL regToDIN, DOUTtoReg, DINconverted, filter_out: IO_array;
 	
 	COMPONENT FIR_Filter_Unf IS
-	GENERIC(
-			Ord: INTEGER := FIR_ORDER; --Filter Order
-			Nb: INTEGER := NUM_BITS; --# of bits
-			UO: INTEGER := UNF_ORDER; -- Unfolding Order
-			Nbmult: INTEGER := NUM_BITS_MULT
-			);
 	PORT(
 		CLK, RST_n:	IN STD_LOGIC;
 		VIN:	IN STD_LOGIC;
@@ -125,12 +119,10 @@ BEGIN
 END PROCESS;
 	
 test_input_read: PROCESS
-	VARIABLE iLine,cLine: LINE;
-	VARIABLE i,j: INTEGER;
+	VARIABLE iLine,cLine, coutLine: LINE;
+	VARIABLE i,j,k: INTEGER := 0;
 	VARIABLE coeffs_integer: coeffs_array;
-	BEGIN
-		i := 0;
-		j := 0;
+BEGIN
 		file_open(inputs, "samples.txt", READ_MODE);
 		WHILE (NOT ENDFILE(inputs)) LOOP
 			READLINE(inputs, iLine);
@@ -146,21 +138,32 @@ test_input_read: PROCESS
 		END LOOP;
 		file_close(coeff_file);
 		visual_coeffs_integer <= coeffs_integer;
-		FOR k IN 0 TO N LOOP
+		
+		file_open(c_outs_file, "c_outputvectors.txt", READ_MODE);
+		WHILE (NOT ENDFILE(c_outs_file)) LOOP
+			READLINE(c_outs_file, coutLine);
+			READ(coutLine, c_outputs(k));
+			k := k+1;
+		END LOOP;
+		file_close(c_outs_file);
+		
+		FOR k IN 0 TO Ord LOOP
 			coeffs_std((k+1)*Nb-1 DOWNTO k*Nb)<= std_logic_vector(to_signed(coeffs_integer(k),Nb));
 		END LOOP;
 		
 		WAIT;
-	END PROCESS;
+END PROCESS;
 	
 test_results_write: PROCESS(CLK)
 	VARIABLE oLine: LINE;
-	VARIABLE i: INTEGER := 0;
+	VARIABLE i,j: INTEGER := 0;
+	VARIABLE diff: INTEGER := 0;
 	VARIABLE opened_flag : INTEGER := 0;
 	BEGIN
 		IF CLK'EVENT AND CLK = '1' THEN
 			IF opened_flag = 0 THEN
 				file_open(results, "output_vectors_unfolded.txt", WRITE_MODE);
+				file_open(output_diffs, "output_diffs.txt", WRITE_MODE);
 				opened_flag := 1;
 			END IF;
 			IF VIN = '1' AND i <= (input_samples'LENGTH -1 - UO) THEN
@@ -173,9 +176,21 @@ test_results_write: PROCESS(CLK)
 		IF CLK'EVENT AND CLK = '1' THEN
 			IF VOUT = '1' THEN
 				FOR k IN 0 TO UO-1 LOOP
-				WRITE(oLine, to_integer(signed(DOUTtoReg(k))));
-				WRITELINE(results, oLine);
+					WRITE(oLine, to_integer(signed(DOUTtoReg(k))));
+					WRITELINE(results, oLine);
 				END LOOP;
+				
+				FOR k IN 0 TO UO-1 LOOP
+					diff := (to_integer(signed(DOUTtoReg(k))) - c_outputs(j+k));
+					IF(diff /= 0) THEN
+						WRITE(oLine, diff);
+						WRITE(oLine, string'("   Sample: "));
+						WRITE(oLine, (j+k+1));
+						WRITELINE(output_diffs, oLine);
+					END IF;
+				END LOOP;
+				j := j+UO;
+				
 			END IF;
 		END IF;
 	END PROCESS;

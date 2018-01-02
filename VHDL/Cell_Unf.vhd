@@ -6,18 +6,12 @@ USE ieee.math_real.all;
 USE work.FIR_constants.all;
 
 ENTITY Cell_Unf IS
-	GENERIC
-	(
-		Nb: INTEGER := NUM_BITS; --9
-		Ord: INTEGER := FIR_ORDER; --8
-		Nbmult: INTEGER := NUM_BITS_MULT --10
-	);
 	PORT
 	(
 		DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 		COEFF: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-		SUM_IN: IN STD_LOGIC_VECTOR(NBADDER-1 DOWNTO 0);
-		SUM_OUT: OUT STD_LOGIC_VECTOR(NBADDER-1 DOWNTO 0)
+		SUM_IN: IN STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
+		SUM_OUT: OUT STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0)
 	);
 END ENTITY;
 
@@ -55,8 +49,14 @@ BEGIN
 		mult_out => mult_out
 	);
 	
-	mult_ext(Nbmult-1 DOWNTO 0) <= mult_out((mult_out'LENGTH-1) DOWNTO (mult_out'LENGTH-1)-(Nbmult-1));
-	mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => mult_ext(Nbmult-1));
+	mult_out_extension_0: IF (Nbadder <= Nbmult) GENERATE
+			mult_ext <= mult_out((mult_out'LENGTH -(Nbmult - Nbadder) -1) DOWNTO (mult_out'LENGTH-1)-(Nbmult-1));
+		END GENERATE;
+		
+	mult_out_extension_1: IF (Nbadder > Nbmult) GENERATE
+			mult_ext(Nbmult-1 DOWNTO 0) <= mult_out((mult_out'LENGTH-1) DOWNTO (mult_out'LENGTH-1)-(Nbmult-1));
+			mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => mult_ext(Nbmult-1));
+		END GENERATE;
 	
 	sum: adder_n GENERIC MAP(Nb => Nbadder)
 	PORT MAP

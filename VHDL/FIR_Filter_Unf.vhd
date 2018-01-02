@@ -5,12 +5,6 @@ USE ieee.numeric_std.all;
 USE work.FIR_constants.all;
 
 ENTITY FIR_Filter_Unf IS
-GENERIC(
-		Ord: INTEGER := FIR_ORDER; --Filter Order
-		Nb: INTEGER := NUM_BITS; --# of bits
-		UO: INTEGER := UNF_ORDER; -- Unfolding Order
-		Nbmult: INTEGER := NUM_BITS_MULT
-		);
 PORT(
 	CLK, RST_n:	IN STD_LOGIC;
 	VIN:	IN STD_LOGIC;
@@ -57,18 +51,12 @@ ARCHITECTURE beh of FIR_Filter_Unf IS
 	END COMPONENT;
 	
 	COMPONENT Cell_Unf IS
-		GENERIC
-		(
-			Nb: INTEGER := 9;
-			Ord: INTEGER := 8;
-			Nbmult: INTEGER := 10
-		);
 		PORT
 		(
 			DIN: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 			COEFF: IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-			SUM_IN: IN STD_LOGIC_VECTOR(NBADDER-1 DOWNTO 0);
-			SUM_OUT: OUT STD_LOGIC_VECTOR(NBADDER-1 DOWNTO 0)
+			SUM_IN: IN STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
+			SUM_OUT: OUT STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0)
 		);
 	END COMPONENT;
 
@@ -89,9 +77,15 @@ BEGIN
 		Single_mult: mult_n GENERIC MAP(Nb => Nb)
 		PORT MAP(in_a => REGs_sig(i)(0), in_b => Bi(0), mult_out => mults_ext(i));
 		
-		sum_outs(i)(0)(Nbmult-1 DOWNTO 0) <= mults_ext(i)((mults_ext(i)'LENGTH-1) DOWNTO (mults_ext(i)'LENGTH-1)-(Nbmult-1));
-		sum_outs(i)(0)(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => sum_outs(i)(0)(Nbmult-1));
-	
+		mults_ext_extension_0: IF (Nbadder <=  Nbmult) GENERATE
+			sum_outs(i)(0) <= mults_ext(i)((mults_ext(i)'LENGTH -(Nbmult - Nbadder) -1) DOWNTO (mults_ext(i)'LENGTH-1)-(Nbmult-1));
+		END GENERATE;
+		
+		mults_ext_extension_1: IF(Nbadder > Nbmult) GENERATE
+			sum_outs(i)(0)(Nbmult-1 DOWNTO 0) <= mults_ext(i)((mults_ext(i)'LENGTH-1) DOWNTO (mults_ext(i)'LENGTH-1)-(Nbmult-1));	
+			sum_outs(i)(0)(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => sum_outs(i)(0)(Nbmult-1));
+		END GENERATE;
+		
 	END GENERATE;
 	
 	REGS_col_gen: FOR Xi IN 0 TO UO-1 GENERATE -- Xi = Row Index of Input signals : 0, 1, ..., UO-1
@@ -111,8 +105,7 @@ BEGIN
 			
 		BEGIN
 		
-		Single_Cell: Cell_Unf GENERIC MAP(Nb => Nb, Ord => Ord)
-		PORT MAP
+		Single_Cell: Cell_Unf PORT MAP
 		(
 			DIN =>  REGS_sig(Xi)(Xj),
 			COEFF => Bi(Cj+1),
