@@ -6,11 +6,6 @@ USE ieee.math_real.all;
 USE work.FIR_constants.all;
 
 	ENTITY FIR_filter IS
-	GENERIC(
-			Ord: INTEGER := FIR_ORDER; --Filter Order
-			Nb: INTEGER := NUM_BITS; --# of bits
-			Nbmult: INTEGER := NUM_BITS_MULT -- # of significant bits from the multiplier
-			);
 	PORT(
 		CLK, RST_n:	IN STD_LOGIC;
 		VIN:	IN STD_LOGIC;
@@ -35,10 +30,6 @@ ARCHITECTURE beh_fir OF FIR_filter IS
 	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
 	
 	COMPONENT Cell IS
-		GENERIC(Nb:INTEGER:= NUM_BITS;
-				Ord: INTEGER := FIR_ORDER; -- Filter Order
-				Nbmult: INTEGER := NUM_BITS_MULT
-				);
 		PORT(
 			CLK, RST_n, EN : IN STD_LOGIC;
 			DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
@@ -81,14 +72,19 @@ BEGIN
 	
 	REG_OUT_array(0) <= DIN;
 	
-	mult_ext(Nbmult-1 DOWNTO 0) <= DIN_mult((DIN_mult'LENGTH)-1 DOWNTO (DIN_mult'LENGTH)-1-(Nbmult-1));
-	mult_ext(Nbadder-1 DOWNTO Nbmult) <= (others => mult_ext(Nbmult-1));
-
+	DIN_mult_extension_0: IF (Nbadder <= Nbmult) GENERATE
+			mult_ext <= DIN_mult((DIN_mult'LENGTH - (Nbmult - Nbadder) -1) DOWNTO (DIN_mult'LENGTH)-1-(Nbmult-1));
+		END GENERATE;
+		
+	DIN_mult_extension_1: IF (Nbadder > Nbmult) GENERATE
+			mult_ext(Nbmult-1 DOWNTO 0)<= DIN_mult((DIN_mult'LENGTH -1) DOWNTO ((DIN_mult'LENGTH)-1-(Nbmult-1)) );
+			mult_ext(Nbadder-1 DOWNTO Nbmult) <= (OTHERS => mult_ext(Nbmult-1));
+		END GENERATE;
+	
 	SUM_OUT_array(0) <= mult_ext;
 	
 	Cells_gen: FOR j IN 0 to Ord-1 GENERATE
-			Single_cell: Cell GENERIC MAP(Nb => Nb, Ord => Ord, Nbmult => Nbmult) -- Nb is the # of bits entering the j-th cell
-						PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
+			Single_cell: Cell PORT MAP(CLK => CLK, RST_n => RST_n, EN => VIN,
 									DIN => REG_OUT_array(j),
 									SUM_IN => SUM_OUT_array(j), 
 									Bi => Bi(j+1), 
@@ -96,8 +92,7 @@ BEGIN
 									ADD_OUT => SUM_OUT_array(j+1));
 	END GENERATE;
 	
-	--DOUT <= SUM_OUT_array(Ord)(Nbadder-1 DOWNTO (Nbadder-1)-(Nb-1));
-		DOUT <= SUM_OUT_array(Ord)(Nb-1 DOWNTO 0);
+	DOUT <= SUM_OUT_array(Ord)(Nb-1 DOWNTO 0);
 	VOUT <= VIN;
 	
 END beh_fir;

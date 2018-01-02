@@ -4,11 +4,11 @@ USE ieee.math_real.all;
 
 PACKAGE FIR_constants IS
 	
-	CONSTANT NUM_BITS : INTEGER := 9;
-	CONSTANT FIR_ORDER: INTEGER := 8;
-	CONSTANT UNF_ORDER: INTEGER := 3;
-	CONSTANT NUM_BITS_MULT: INTEGER := 10;
-	CONSTANT Nbadder: INTEGER:= NUM_BITS_MULT + integer(floor(log2(real(FIR_ORDER+1))));
+	CONSTANT Nb : INTEGER := 9;
+	CONSTANT Ord: INTEGER := 8;
+	CONSTANT UO: INTEGER := 3;
+	CONSTANT Nbmult: INTEGER := 10;
+	CONSTANT Nbadder: INTEGER:= Nb; --NUM_BITS_MULT + integer(floor(log2(real(FIR_ORDER+1))));
 	
 END FIR_constants;
 

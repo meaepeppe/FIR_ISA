@@ -8,22 +8,21 @@ USE STD.textio.all;
 
 ENTITY tb_FIR_filter_direct IS
 GENERIC(
-	N: integer := FIR_ORDER;
-	Nb: integer := NUM_BITS;
-	Nbmult: integer := NUM_BITS_MULT;
-	N_sample: integer := 1000
+	N_sample: integer := 202
 );
 END ENTITY;
 
 ARCHITECTURE test OF tb_FIR_filter_direct IS
 	
 	TYPE vector_test IS ARRAY (N_sample-1 DOWNTO 0) OF INTEGER;
-	TYPE coeffs_array IS ARRAY (N DOWNTO 0) OF INTEGER;
-	TYPE sig_array IS ARRAY (N DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
+	TYPE coeffs_array IS ARRAY (Ord DOWNTO 0) OF INTEGER;
+	TYPE sig_array IS ARRAY (Ord DOWNTO 0) OF SIGNED(Nb-1 DOWNTO 0);
 
 	FILE inputs: text;
 	FILE coeff_file: text;
-	SHARED VARIABLE input_samples: vector_test;
+	FILE c_outs_file: text;
+	
+	SHARED VARIABLE input_samples, c_outputs: vector_test;
 
 	SIGNAL CLK, RST_n: STD_LOGIC;
 	SIGNAL VIN, VOUT: STD_LOGIC;
@@ -31,18 +30,13 @@ ARCHITECTURE test OF tb_FIR_filter_direct IS
 	SIGNAL sample: SIGNED(Nb-1 DOWNTO 0);
 	SIGNAL DINconverted: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL filter_out: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
-	SIGNAL coeffs_std: std_logic_vector ((N+1)*Nb - 1 DOWNTO 0);
+	SIGNAL coeffs_std: std_logic_vector ((Ord+1)*Nb - 1 DOWNTO 0);
 	SIGNAL visual_coeffs_integer: coeffs_array;
 	
 	SIGNAL regToDIN: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	SIGNAL DOUTtoReg: STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	
 	COMPONENT FIR_filter IS
-	GENERIC(
-			Ord: INTEGER := FIR_ORDER; --Filter Order
-			Nb: INTEGER := NUM_BITS; --# of bits
-			Nbmult: INTEGER := NUM_BITS_MULT -- # of significant bits from the multiplier
-			);
 	PORT(
 		CLK, RST_n:	IN STD_LOGIC;
 		VIN:	IN STD_LOGIC;
@@ -92,15 +86,36 @@ CLK_gen: PROCESS
 		CLK <= '1';
 		WAIT FOR 10 ns;
 	END PROCESS;
-		
-test_input_read: PROCESS
-	VARIABLE iLine,cLine: LINE;
-	VARIABLE i,j: INTEGER := 0;
-	VARIABLE coeffs_integer: coeffs_array;
 
-	BEGIN
+VIN_RST_gen: PROCESS
+
+BEGIN
 	VIN <= '0';
 	RST_n <= '0';
+	
+	WAIT FOR 10 ns;
+	RST_n <= '1';
+	WAIT FOR 5 ns;
+	VIN <= '1';
+	
+	WAIT FOR 745 ns;
+	VIN <= '0';
+	WAIT FOR 60 ns;
+	VIN <= '1';
+	
+	WAIT FOR 3280 ns;
+	VIN <= '0';
+
+	WAIT;
+END PROCESS;
+	
+test_input_read: PROCESS
+	VARIABLE iLine,cLine, coutLine: LINE;
+	VARIABLE i,j,k: INTEGER := 0;
+	VARIABLE coeffs_integer: coeffs_array;
+
+BEGIN
+	
 		file_open(inputs, "samples.txt", READ_MODE);
 		WHILE (NOT ENDFILE(inputs)) LOOP
 			READLINE(inputs, iLine);
@@ -108,39 +123,37 @@ test_input_read: PROCESS
 			i := i+1;
 		END LOOP;
 		file_close(inputs);
+		
 		file_open(coeff_file, "coeffs.txt", READ_MODE);
 		WHILE (NOT ENDFILE(coeff_file)) LOOP
 			READLINE(coeff_file, cLine);
 			READ(cLine, coeffs_integer(j));
 			j := j+1;
 		END LOOP;
-		file_close(coeff_file);
+		file_close(coeff_file);		
 		visual_coeffs_integer <= coeffs_integer;
-		FOR i IN 0 TO N LOOP
+		
+		file_open(c_outs_file, "c_outputvectors.txt", READ_MODE);
+		WHILE (NOT ENDFILE(c_outs_file)) LOOP
+			READLINE(c_outs_file, coutLine);
+			READ(coutLine, c_outputs(k));
+			k := k+1;
+		END LOOP;
+		file_close(c_outs_file);
+		
+		FOR i IN 0 TO Ord LOOP
 			coeffs_std((i+1)*Nb-1 DOWNTO i*Nb)<= std_logic_vector(to_signed(coeffs_integer(i),Nb));
 		END LOOP;
 		
-		WAIT FOR 10 ns;
-		RST_n <= '1';
-		WAIT FOR 5 ns;
-		VIN <= '1';
-		
-		WAIT FOR 745 ns;
-		VIN <= '0';
-		WAIT FOR 60 ns;
-		VIN <= '1';
-		
-		WAIT FOR 3280 ns;
-		VIN <= '0';
-
 		WAIT;
-	
-	END PROCESS;
+END PROCESS;
 	
 test_results_write: PROCESS(CLK)
 	VARIABLE oLine: LINE;
-	VARIABLE i: INTEGER := 0;
+	VARIABLE i, j: INTEGER := 0;
+	VARIABLE diff: INTEGER := 0;
 	FILE results: text is out "output_vectors_direct.txt";
+	FILE output_diffs: text is out "output_diffs.txt";
 	BEGIN
 		IF CLK'EVENT AND CLK = '1' THEN
 			IF VIN = '1' THEN
@@ -150,8 +163,18 @@ test_results_write: PROCESS(CLK)
 		END IF;
 		IF CLK'EVENT AND CLK = '1' THEN
 			IF VOUT = '1' THEN
-			WRITE(oLine, to_integer(signed(DOUTtoReg)));
-			WRITELINE(results, oLine);
+				WRITE(oLine, to_integer(signed(DOUTtoReg)));
+				WRITELINE(results, oLine);
+				
+				diff := (to_integer(signed(DOUTtoReg)) - c_outputs(j));
+				
+				IF(diff /= 0) THEN
+					WRITE(oLine, diff);
+					WRITE(oLine, string'("   Sample: "));
+					WRITE(oLine, (j+1));
+					WRITELINE(output_diffs, oLine);
+				END IF;
+				j := j+1;
 			END IF;
 		END IF;
 		

@@ -6,10 +6,6 @@ USE ieee.math_real.all;
 USE work.FIR_constants.all;
 
 ENTITY Cell IS
-	GENERIC(Nb:INTEGER:= NUM_BITS;
-			Ord: INTEGER := FIR_ORDER; -- Filter Order
-			Nbmult: INTEGER := NUM_BITS_MULT
-			);
 	PORT(
 		CLK, RST_n, EN : IN STD_LOGIC;
 		DIN : IN STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
@@ -65,10 +61,16 @@ BEGIN
 	Product: mult_n GENERIC MAP(Nb => Nb)
 					PORT MAP(in_a => REG_OUT_sig, in_b => Bi, mult_out => mult);
 	
-	mult_ext(Nbmult-1 DOWNTO 0) <= mult ((mult'LENGTH)-1 DOWNTO (mult'LENGTH)-1-(Nbmult-1));
-	mult_ext(Nbadder-1 DOWNTO Nbmult) <= (others => mult_ext(Nbmult-1));
+	mult_extension_0: IF (Nbadder <= Nbmult) GENERATE
+		mult_ext <= mult ((mult'LENGTH - (Nbmult - Nbadder) -1) DOWNTO (mult'LENGTH)-1-(Nbmult-1));
+	END GENERATE;
 	
-	Sum: adder_n GENERIC MAP(Nb => Nbadder) -- aggiunti 9 bit di guardia
+	mult_extension_1: IF (Nbadder > Nbmult) GENERATE
+		mult_ext(Nbmult-1 DOWNTO 0) <= mult ((mult'LENGTH -1) DOWNTO ((mult'LENGTH)-1-(Nbmult-1)) );
+		mult_ext(Nbadder-1 DOWNTO Nbmult) <= (others => mult_ext(Nbmult-1));
+	END GENERATE;
+	
+	Sum: adder_n GENERIC MAP(Nb => mult_ext'LENGTH) -- aggiunti 9 bit di guardia
 				 PORT MAP(in_a => SUM_IN, in_b => mult_ext, sum_out => ADD_OUT);
 				
 END beh_cell;	
