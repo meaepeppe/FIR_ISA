@@ -27,6 +27,7 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 	
 	SHARED VARIABLE input_samples, c_outputs: vector_test;
 
+	SIGNAL tot_pipe_stages: INTEGER;
 	SIGNAL CLK, RST_n: STD_LOGIC;
 	SIGNAL VIN, VOUT: STD_LOGIC;
 	SIGNAL sample: sample_sign_array;
@@ -59,6 +60,18 @@ ARCHITECTURE test OF tb_FIR_filter_unf IS
 
 	
 BEGIN
+
+Tot_latency: PROCESS
+BEGIN
+	IF IO_buffers = TRUE THEN
+		tot_pipe_stages <= 2;
+	ELSE
+		tot_pipe_stages <= 0;
+	END IF;
+	
+	WAIT;
+END PROCESS;
+
 
 Conv_DIN: FOR i IN 0 TO UO-1 GENERATE
 	DINconverted(i) <= std_logic_vector(sample(i));
