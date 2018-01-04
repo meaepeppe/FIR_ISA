@@ -23,7 +23,8 @@ ARCHITECTURE test OF tb_FIR_filter_direct IS
 	FILE c_outs_file: text;
 	
 	SHARED VARIABLE input_samples, c_outputs: vector_test;
-
+	
+	SIGNAL tot_pipe_stages: INTEGER;
 	SIGNAL CLK, RST_n: STD_LOGIC;
 	SIGNAL VIN, VOUT: STD_LOGIC;
 	SIGNAL VIN_array: STD_LOGIC_VECTOR(2 DOWNTO 0);
@@ -59,6 +60,19 @@ ARCHITECTURE test OF tb_FIR_filter_direct IS
 
 	
 BEGIN
+
+Tot_latency: PROCESS
+BEGIN
+	IF IO_buffers = TRUE THEN
+		tot_pipe_stages <= 2;
+	ELSE
+		tot_pipe_stages <= 0;
+	END IF;
+	
+	WAIT;
+END PROCESS;
+
+
 DINconverted <= std_logic_vector(sample);
 
 DUT: FIR_filter 
