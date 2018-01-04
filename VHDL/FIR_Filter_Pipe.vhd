@@ -22,16 +22,17 @@ ARCHITECTURE beh OF FIR_filter_Pipe IS
 	TYPE coeff_array IS ARRAY (Ord DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	TYPE sig_array IS ARRAY (Ord-1 DOWNTO 0) OF STD_LOGIC_VECTOR(Nb-1 DOWNTO 0);
 	
+	
 	SIGNAL Bi: coeff_array; -- there IS Ord instead of Ord-1 becaUSE the coeffs are Ord+1
 	SIGNAL REG_IN_array, Pipe_reg_in: sig_array;
 	SIGNAL SUM_OUT_array: sum_array;
 	
 	SIGNAL DIN_mult: STD_LOGIC_VECTOR(2*Nb-1 DOWNTO 0);
 	SIGNAL mult_ext: STD_LOGIC_VECTOR(Nbadder-1 DOWNTO 0);
+	SIGNAL Coeffs_delayed: STD_LOGIC_VECTOR(((Ord+1)*Nb)-1 DOWNTO 0);
 
-	
 	SIGNAL VIN_delay_line: STD_LOGIC_VECTOR(Ord DOWNTO 0);
-	--SIGNAL VIN_array: STD_LOGIC_VECTOR(2*Ord-1 DOWNTO 0);
+	SIGNAL VIN_vector, VOUT_vector: STD_LOGIC_VECTOR(0 DOWNTO 0);
 	
 	COMPONENT Cell_Pipe IS 
 		PORT(
@@ -65,24 +66,77 @@ ARCHITECTURE beh OF FIR_filter_Pipe IS
 	END COMPONENT;
 
 BEGIN
+
+-----------------------------------------------------------
+------------------------ Input Buffers -------------------- 
+
+	In_buffers_1: IF IO_buffers GENERATE
 	
-	Coeff_gen: FOR i IN 0 to Ord GENERATE
-		Bi(i) <= Coeffs(((i+1)*Nb)-1 DOWNTO (i*Nb));
+		data_in_reg: Reg_n GENERIC MAP (Nb => Nb)
+		PORT MAP
+		(
+			CLK => CLK,
+			RST_n => RST_n,
+			EN => VIN,
+			DIN => DIN,
+			DOUT => REG_IN_array(0)
+		);
+		
+		Coeffs_in_reg: Reg_n GENERIC MAP (Nb => ((Ord+1)*Nb))
+		PORT MAP
+		(
+			CLK => CLK,
+			RST_n => RST_n,
+			EN => VIN,
+			DIN => Coeffs,
+			DOUT => Coeffs_delayed
+		);
+		
+		VIN_vector(0) <= VIN;
+		
+		VIN_in_reg: Reg_n GENERIC MAP (Nb => 1)
+		PORT MAP
+		(
+			CLK => CLK,
+			RST_n => RST_n,
+			EN => '1',
+			DIN => VIN_vector(0 DOWNTO 0),
+			DOUT => VIN_delay_line(0 DOWNTO 0)
+		); 
+		
 	END GENERATE;
 	
-	REG_IN_array(0) <= DIN;
-	VIN_delay_line(0) <= VIN;
+	In_buffers_0: IF NOT(IO_buffers) GENERATE
 	
+		REG_IN_array(0) <= DIN;
+		Coeffs_delayed <= Coeffs;
+		VIN_delay_line(0) <= VIN;
+	END GENERATE;
+	
+------------------------------------------------------------
+------------------------ VIN Delay Line --------------------
+
 	VIN_Delays: FOR i IN 0 TO VIN_delay_line'LENGTH-2 GENERATE
-		Single_delay_VIN: Reg_n GENERIC MAP( Nb => 1)
-								PORT MAP(CLK => CLK, RST_n => RST_n, EN => '1',
-								DIN => VIN_delay_line(i DOWNTO i),
-								DOUT => VIN_delay_line(i+1 DOWNTO i+1));
+	Single_delay_VIN: Reg_n GENERIC MAP( Nb => 1)
+	PORT MAP
+	(
+		CLK => CLK, 
+		RST_n => RST_n, 
+		EN => '1',
+		DIN => VIN_delay_line(i DOWNTO i),
+		DOUT => VIN_delay_line(i+1 DOWNTO i+1)
+	);
+	END GENERATE;
 	
+--------------------------------------------------------------
+------------------------ First Multiplier --------------------
+
+	Coeff_gen: FOR i IN 0 to Ord GENERATE
+		Bi(i) <= Coeffs_delayed(((i+1)*Nb)-1 DOWNTO (i*Nb));
 	END GENERATE;
 	
 	DIN_mult_gen: mult_n GENERIC MAP(Nb => Nb)
-						 PORT MAP(in_a => DIN, in_b => Bi(0), mult_out => DIN_mult);	
+						 PORT MAP(in_a => REG_IN_array(0), in_b => Bi(0), mult_out => DIN_mult);	
 	
 	DIN_mult_extension_0: IF (Nbadder <= Nbmult) GENERATE
 		mult_ext <= DIN_mult((DIN_mult'LENGTH - (Nbmult - Nbadder) -1) DOWNTO (DIN_mult'LENGTH -1 -(Nbmult-1)));
@@ -95,6 +149,9 @@ BEGIN
 	
 	SUM_OUT_array(0) <= mult_ext;
 	
+-------------------------------------------------------------
+------------------------ Matrix of Cells --------------------	
+
 	Cells_gen: FOR j IN 0 to Ord-1 GENERATE
 			Single_cell: Cell_Pipe PORT MAP
 			(
@@ -108,6 +165,9 @@ BEGIN
 				ADD_OUT => SUM_OUT_array(j+1)
 			);
 	END GENERATE;
+
+------------------------------------------------------------------------
+------------------------ Outside Pipeline Registers --------------------
 	
 	Pipe_reg_gen: FOR j IN 0 TO Ord-2 GENERATE
 		
@@ -118,9 +178,41 @@ BEGIN
 		
 	END GENERATE;
 	
-	DOUT <= SUM_OUT_array(Ord)(Nb-1 DOWNTO 0);
+-----------------------------------------------------------
+----------------------- Output Buffers --------------------
+
+	Out_buffers_1: IF IO_buffers GENERATE
 	
-	VOUT <= VIN_delay_line(VIN_delay_line'LENGTH-1);
+		data_out_reg: Reg_n GENERIC MAP (Nb => Nb)
+		PORT MAP
+		(
+			CLK => CLK,
+			RST_n => RST_n,
+			EN => VIN_delay_line((VIN_delay_line'LENGTH-1)),
+			DIN => SUM_OUT_array(Ord)(Nb-1 DOWNTO 0),
+			DOUT => DOUT
+		);
+		
+		VIN_out_reg: Reg_n GENERIC MAP (Nb => 1)
+			PORT MAP
+			(
+				CLK => CLK,
+				RST_n => RST_n,
+				EN => '1',
+				DIN => VIN_delay_line((VIN_delay_line'LENGTH-1) DOWNTO (VIN_delay_line'LENGTH-1)),
+				DOUT => VOUT_vector
+			);
+		
+		VOUT <= VOUT_vector(0);
+		
+	END GENERATE;
+	
+	Out_buffers_0: IF NOT(IO_buffers) GENERATE
+	
+		DOUT <= SUM_OUT_array(Ord)(Nb-1 DOWNTO 0);
+		VOUT <= VIN_delay_line(VIN_delay_line'LENGTH-1);
+	END GENERATE;
+	
 	
 END beh;
 
