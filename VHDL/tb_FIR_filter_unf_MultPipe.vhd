@@ -59,9 +59,18 @@ ARCHITECTURE test OF tb_FIR_filter_unf_MultPipe IS
 	END COMPONENT; 
 
 BEGIN
-
-	tot_pipe_stages <= TOTAL_PIPE_STAGES;
-
+	
+	Tot_latency: PROCESS
+	BEGIN
+		IF IO_buffers = TRUE THEN
+			tot_pipe_stages <= CELLS_PIPE_STAGES*(1 + pipe_d) + pipe_d +2;
+		ELSE
+			tot_pipe_stages <= CELLS_PIPE_STAGES*(1 + pipe_d) + pipe_d;
+		END IF;
+		
+		WAIT;
+	END PROCESS;
+	
 	Conv_DIN: FOR i IN 0 TO UO-1 GENERATE
 		DINconverted(i) <= std_logic_vector(sample(i));
 	END GENERATE;
