@@ -1,0 +1,182 @@
+
+****************************************
+Report : area
+Design : myfir
+Version: Z-2007.03-SP1
+Date   : Mon Jan  8 20:49:31 2018
+****************************************
+
+Library(s) Used:
+
+    NangateOpenCellLibrary (File: /software/dk/nangate45/synopsys/NangateOpenCellLibrary_typical_ecsm_nowlm.db)
+
+Number of ports:              139
+Number of nets:               139
+Number of cells:                1
+Number of references:           1
+
+Combinational area:       16866.261922
+Noncombinational area:    8458.800271
+Net Interconnect area:      undefined  (Wire load has zero net area)
+
+Total cell area:          25325.062500
+Total area:                 undefined
+1
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Information: Updating design information... (UID-85)
+Warning: Design 'myfir' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : myfir
+Version: Z-2007.03-SP1
+Date   : Mon Jan  8 20:49:31 2018
+****************************************
+
+ # A fanout number of 1000 was used for high fanout net computations.
+
+Operating Conditions: typical   Library: NangateOpenCellLibrary
+Wire Load Model Mode: top
+
+  Startpoint: fir/Coeffs_in_reg/DOUT_reg[55]
+              (rising edge-triggered flip-flop clocked by MY_CLK)
+  Endpoint: fir/Single_Cell_1_5/mult/mult_pipe_cell_0/DOUT_reg[17]
+            (rising edge-triggered flip-flop clocked by MY_CLK)
+  Path Group: MY_CLK
+  Path Type: max
+
+  Des/Clust/Port     Wire Load Model       Library
+  ------------------------------------------------
+  myfir              5K_hvratio_1_1        NangateOpenCellLibrary
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MY_CLK (rise edge)                                0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  fir/Coeffs_in_reg/DOUT_reg[55]/CK (SDFFR_X1)            0.00 #     0.00 r
+  fir/Coeffs_in_reg/DOUT_reg[55]/Q (SDFFR_X1)             0.10       0.10 r
+  fir/Coeffs_in_reg/DOUT[55] (Reg_n_Nb81)                 0.00       0.10 r
+  fir/Single_Cell_1_5/COEFF[1] (Cell_Unf_Pipe_10)         0.00       0.10 r
+  fir/Single_Cell_1_5/mult/in_b[1] (mult_n_Nb9_pipe_d1_10)
+                                                          0.00       0.10 r
+  fir/Single_Cell_1_5/mult/mult_43/b[1] (mult_n_Nb9_pipe_d1_10_DW_mult_tc_0)
+                                                          0.00       0.10 r
+  fir/Single_Cell_1_5/mult/mult_43/U438/ZN (INV_X1)       0.04       0.13 f
+  fir/Single_Cell_1_5/mult/mult_43/U379/ZN (NOR2_X1)      0.06       0.19 r
+  fir/Single_Cell_1_5/mult/mult_43/U74/CO (HA_X1)         0.06       0.25 r
+  fir/Single_Cell_1_5/mult/mult_43/U365/ZN (NAND2_X1)     0.02       0.27 f
+  fir/Single_Cell_1_5/mult/mult_43/U367/ZN (NAND3_X1)     0.03       0.31 r
+  fir/Single_Cell_1_5/mult/mult_43/U69/S (FA_X1)          0.12       0.43 f
+  fir/Single_Cell_1_5/mult/mult_43/U361/ZN (NAND2_X1)     0.04       0.47 r
+  fir/Single_Cell_1_5/mult/mult_43/U363/ZN (NAND3_X1)     0.04       0.51 f
+  fir/Single_Cell_1_5/mult/mult_43/U340/ZN (NAND2_X1)     0.04       0.55 r
+  fir/Single_Cell_1_5/mult/mult_43/U259/ZN (NAND3_X1)     0.04       0.58 f
+  fir/Single_Cell_1_5/mult/mult_43/U272/ZN (NAND2_X1)     0.04       0.62 r
+  fir/Single_Cell_1_5/mult/mult_43/U245/ZN (NAND3_X1)     0.04       0.66 f
+  fir/Single_Cell_1_5/mult/mult_43/U254/ZN (NAND2_X1)     0.03       0.69 r
+  fir/Single_Cell_1_5/mult/mult_43/U221/ZN (NAND3_X1)     0.04       0.73 f
+  fir/Single_Cell_1_5/mult/mult_43/U227/ZN (NAND2_X1)     0.04       0.77 r
+  fir/Single_Cell_1_5/mult/mult_43/U224/ZN (NAND3_X1)     0.04       0.80 f
+  fir/Single_Cell_1_5/mult/mult_43/U238/ZN (NAND2_X1)     0.04       0.84 r
+  fir/Single_Cell_1_5/mult/mult_43/U240/ZN (NAND3_X1)     0.04       0.88 f
+  fir/Single_Cell_1_5/mult/mult_43/U295/ZN (NAND2_X1)     0.04       0.92 r
+  fir/Single_Cell_1_5/mult/mult_43/U298/ZN (NAND3_X1)     0.04       0.95 f
+  fir/Single_Cell_1_5/mult/mult_43/U307/ZN (NAND2_X1)     0.03       0.99 r
+  fir/Single_Cell_1_5/mult/mult_43/U302/ZN (NAND3_X1)     0.04       1.03 f
+  fir/Single_Cell_1_5/mult/mult_43/U288/ZN (NAND2_X1)     0.04       1.06 r
+  fir/Single_Cell_1_5/mult/mult_43/U319/ZN (NAND3_X1)     0.04       1.10 f
+  fir/Single_Cell_1_5/mult/mult_43/U329/ZN (NAND2_X1)     0.04       1.14 r
+  fir/Single_Cell_1_5/mult/mult_43/U247/ZN (NAND3_X1)     0.04       1.18 f
+  fir/Single_Cell_1_5/mult/mult_43/U234/ZN (NAND2_X1)     0.04       1.22 r
+  fir/Single_Cell_1_5/mult/mult_43/U292/ZN (NAND3_X1)     0.04       1.26 f
+  fir/Single_Cell_1_5/mult/mult_43/U176/ZN (NAND2_X1)     0.04       1.29 r
+  fir/Single_Cell_1_5/mult/mult_43/U287/ZN (NAND3_X1)     0.03       1.33 f
+  fir/Single_Cell_1_5/mult/mult_43/U349/ZN (NAND2_X1)     0.03       1.35 r
+  fir/Single_Cell_1_5/mult/mult_43/U286/ZN (AND3_X1)      0.05       1.40 r
+  fir/Single_Cell_1_5/mult/mult_43/product[17] (mult_n_Nb9_pipe_d1_10_DW_mult_tc_0)
+                                                          0.00       1.40 r
+  fir/Single_Cell_1_5/mult/mult_pipe_cell_0/DIN[17] (Reg_n_Nb18_10)
+                                                          0.00       1.40 r
+  fir/Single_Cell_1_5/mult/mult_pipe_cell_0/U43/ZN (NAND2_X1)
+                                                          0.03       1.43 f
+  fir/Single_Cell_1_5/mult/mult_pipe_cell_0/U39/ZN (NAND2_X1)
+                                                          0.03       1.46 r
+  fir/Single_Cell_1_5/mult/mult_pipe_cell_0/DOUT_reg[17]/D (DFFR_X2)
+                                                          0.01       1.46 r
+  data arrival time                                                  1.46
+
+  clock MY_CLK (rise edge)                                1.50       1.50
+  clock network delay (ideal)                             0.00       1.50
+  clock uncertainty                                      -0.07       1.43
+  fir/Single_Cell_1_5/mult/mult_pipe_cell_0/DOUT_reg[17]/CK (DFFR_X2)
+                                                          0.00       1.43 r
+  library setup time                                     -0.03       1.40
+  data required time                                                 1.40
+  --------------------------------------------------------------------------
+  data required time                                                 1.40
+  data arrival time                                                 -1.46
+  --------------------------------------------------------------------------
+  slack (VIOLATED)                                                  -0.07
+
+
+1
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Information: Updating design information... (UID-85)
+Warning: Design 'myfir' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+Information: Propagating switching activity (low effort zero delay simulation). (PWR-6)
+Warning: There is no defined clock in the design. (PWR-80)
+ 
+****************************************
+Report : power
+        -analysis_effort low
+Design : myfir
+Version: Z-2007.03-SP1
+Date   : Mon Jan  8 21:33:18 2018
+****************************************
+
+
+Library(s) Used:
+
+    NangateOpenCellLibrary (File: /software/dk/nangate45/synopsys/NangateOpenCellLibrary_typical_ecsm_nowlm.db)
+
+
+Operating Conditions: typical   Library: NangateOpenCellLibrary
+Wire Load Model Mode: top
+
+Design        Wire Load Model            Library
+------------------------------------------------
+myfir                  5K_hvratio_1_1    NangateOpenCellLibrary
+
+
+Global Operating Voltage = 1.1  
+Power-specific unit information :
+    Voltage Units = 1V
+    Capacitance Units = 1.000000ff
+    Time Units = 1ns
+    Dynamic Power Units = 1uW    (derived from V,C,T units)
+    Leakage Power Units = 1nW
+
+
+  Cell Internal Power  =   3.5247 mW   (69%)
+  Net Switching Power  =   1.6027 mW   (31%)
+                         ---------
+Total Dynamic Power    =   5.1274 mW  (100%)
+
+Cell Leakage Power     = 512.0912 uW
+
+1
